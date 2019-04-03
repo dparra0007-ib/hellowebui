@@ -59,10 +59,22 @@ Remember you can put your variables in a YAML formatted file and feed it into th
 ansible-playbook site.yml -e @extra_vars.yml
 ```
 
+Ansible as Infrastructure provider works with procedural templates that doesn't maintaine the state. This means that there is no default management of incremental deployments or rollbacks. They have to ba managed scripting in bash or any scripting programming language. In this example, the rollback has to be done manually.
+
+### Usage with clodformation
+
+ami-070a1367
+aws cloudformation deploy --template-file ./aws-$CI_PIPELINE_ID-$CI_JOB_ID.template --stack-name $CI_PROJECT_NAME --parameter-overrides 'InstanceType=t2.micro' 'KeyName=HelloWebUI' "AMI=$AMI"
+
+aws cloudformation deploy --template-file ./aws.template --stack-name HelloWebui --parameter-overrides 'InstanceType=t2.micro' 'KeyName=HelloWebui' "AMI=ami-070a1367"
+
+ansible-playbook site.yml
+
+
 ### One More Thing
 
 Since we are reusing the apache-simple roles from `examples/apache-role`, we can override the default value of `apache_test_message` to change the message that gets inserted onto the generated home page by the role.
 
 ```
-ansible-playbook site.yml -e "ec2_stack_name=lightbulb ec2_region=us-east-2 ec2_key_name=engima apache_test_message=Hello_World"
+ansible-playbook site.yml -e "ec2_stack_name=lightbulb ec2_region=us-west-1 ec2_key_name=hellowebui_key ec2_az=b ec2_private_key_file=hellowebui_key.pem"
 ```
