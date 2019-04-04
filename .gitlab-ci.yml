@@ -69,7 +69,7 @@ deploy_staging:
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
     - cd ./infrastructure
-    - ansible-playbook site.yml --connection=local --tags provision,setup
+    - ansible-playbook site.yml --tags provision,setup
   environment:
     name: staging
 
