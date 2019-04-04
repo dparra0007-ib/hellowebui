@@ -68,7 +68,8 @@ deploy_staging:
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - ansible-playbook ./infrastructure/site.yml --connection=local --tags provision,setup
+    - cd ./infrastructure
+    - ansible-playbook site.yml --connection=local --tags provision,setup
   environment:
     name: staging
 
@@ -80,7 +81,8 @@ rollback_staging:
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - ansible-playbook ./infrastructure/site.yml --connection=local --tags deprovision
+    - cd ./infrastructure
+    - ansible-playbook site.yml --tags deprovision
   environment:
     name: staging
   when: manual
