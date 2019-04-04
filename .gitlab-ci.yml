@@ -15,7 +15,7 @@ stages:
 build_code:
   stage: build code
   script:
-    - cp ./hellowebui/index.html ./infrastructure/roles/templates/index.html.j2
+    - cp ./hellowebui/index.html ./infrastructure/roles/apache-simple/templates/index.html.j2
 
 # build_service:
 #   stage: build image
