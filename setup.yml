@@ -3,4 +3,6 @@
   hosts: web
   become: yes
   roles:
-    - apache-simple
+    - role: apache-simple
+  tags:
+    - setup

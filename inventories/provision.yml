@@ -1,0 +1,47 @@
+---
+- name: Ensure servers are provisioned in vpc
+  hosts: localhost
+  gather_facts: false
+  tags:
+    - provision
+
+  tasks:
+  - name: create a cloudformation stack
+    cloudformation:
+      stack_name: "{{ stackname }}"
+      state: "present"
+      region: "{{ ec2region }}"
+      disable_rollback: true
+      template: "aws.template"
+      template_parameters:
+        KeyName: "{{ keyname }}"
+        AMI: "{{ ami }}"
+        GroupName: "{{ groupname }}"
+    register: stack
+
+  - name: Get facts about the newly created instances
+    ec2_instance_facts:
+      region: "{{ ec2region }}"
+      filters:
+        instance-state-name: running
+        "tag:aws:cloudformation:stack-name": "{{ stackname }}"
+    register: ec2_facts
+
+  # - name: Show stack outputs
+  #   debug: msg="Got instances {{ec2_facts}}"
+
+  - name: Ensure all instances are ready
+    wait_for:
+      port: 22
+      host: "{{stack.stack_outputs.PublicIP}}"
+      search_regex: OpenSSH
+    with_items: "{{ ec2_facts.instances }}"
+
+  - name: Build group of instances
+    add_host:
+      name: "{{stack.stack_outputs.PublicDNS}}"
+      groups: web
+      ansible_user: centos
+      ansible_host: "{{stack.stack_outputs.PublicIP}}"
+      ansible_ssh_private_key_file: "{{ ec2_private_key_file | default(omit) }}"
+    with_items: "{{ ec2_facts.instances }}"

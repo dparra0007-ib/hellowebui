@@ -1,0 +1,8 @@
+---
+# inventories/group_vars/back-end-servers
+ec2region : "us-west-1"
+stackname: "HelloWebui"
+keyname: "hellowebui_key"
+ami: "ami-070a1367"
+groupname: "HelloWebui-InstanceSecurityGroup"
+ec2_private_key_file: "inventories/hellowebui_key.pem"

@@ -63,13 +63,11 @@ Ansible as Infrastructure provider works with procedural templates that doesn't 
 
 ### Usage with clodformation
 
-ami-070a1367
-aws cloudformation deploy --template-file ./aws-$CI_PIPELINE_ID-$CI_JOB_ID.template --stack-name $CI_PROJECT_NAME --parameter-overrides 'InstanceType=t2.micro' 'KeyName=HelloWebUI' "AMI=$AMI"
+There are specific tools for provisioning like cloudformation for aws or terraform for several cloud providers.
 
-aws cloudformation deploy --template-file ./aws.template --stack-name HelloWebui --parameter-overrides 'InstanceType=t2.micro' 'KeyName=HelloWebui' "AMI=ami-070a1367"
+ansible-playbook site.yml --tags provision,setup
 
-ansible-playbook site.yml
-
+ansible-playbook site.yml --tags deprovision
 
 ### One More Thing
 

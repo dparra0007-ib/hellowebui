@@ -1,0 +1,12 @@
+---
+- name: Ensure servers are deprovisioned in vpc
+  hosts: localhost
+  gather_facts: false
+  tags:
+    - deprovision
+
+  tasks:
+  - name: delete a stack
+    cloudformation:
+      stack_name: "{{ stackname }}"
+      state: "absent"
