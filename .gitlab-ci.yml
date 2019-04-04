@@ -1,0 +1,86 @@
+image: iaghcp-docker-technical-architecture.jfrog.io/docker:1.0.0
+
+services:
+  - name: iaghcp-docker-technical-architecture.jfrog.io/docker-dind:1.0.0
+    alias: docker
+
+stages:
+- build code
+- test code
+# - build image
+# - test image
+- deploy
+- regression test deploy
+
+build_code:
+  stage: build code
+  script:
+    - cp ./hellowebui/index.html ./infrastructure/roles/templates/indes.html.j2
+
+# build_service:
+#   stage: build image
+#   image: iaghcp-docker-technical-architecture.jfrog.io/packer:1.0.0
+#   script:
+#     - cd ./gofrontend
+#     - rm -Rf /home/gitlab-runner/VirtualBox\ VMs/
+#     - packer build
+#      -var "version=$CI_PIPELINE_ID" 
+#      -var "access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID}" 
+#      -var "secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}" template.packer
+#   dependencies:
+#     - build_code
+#   tags:
+#     - iaas
+
+# functional_test_service:
+#   stage: test image
+#   #image: infrastructureascode/aws-cli:1.14.14
+#   image: iaghcp-docker-technical-architecture.jfrog.io/docker-serverless:1.0.0
+#   before_script:
+#     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+#     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
+#     - export AWS_DEFAULT_REGION="us-west-2"
+#   script:
+#     - cp ./aws.template ./aws-$CI_PIPELINE_ID-$CI_JOB_ID.template
+#     - aws s3 cp ./aws-$CI_PIPELINE_ID-$CI_JOB_ID.template s3://glp-workspace-gitlab-ci/
+#     - AMI="$(aws ec2 describe-images --filters Name=tag-key,Values=version Name=tag-value,Values=$CI_PIPELINE_ID --query 'Images[*].{ID:ImageId}' --output text)"
+#     - aws cloudformation deploy --template-file ./aws-$CI_PIPELINE_ID-$CI_JOB_ID.template --stack-name $CI_PROJECT_NAME --parameter-overrides 'InstanceType=t2.micro' 'KeyName=MiddleTier' "AMI=$AMI"
+    
+#     - PUBLIC_IP="$(aws ec2 describe-instances --filters "Name=tag-key,Values=aws:cloudformation:stack-name" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+#     - sed -i -e "s/{{PUBLIC_IP}}/$PUBLIC_IP/g" ./gofrontend-functional-test/config/default.json
+
+#     - cd ./gofrontend-functional-test
+#     - wget --header="X-Api-Key:${POSTMAN_API_KEY}" -O ./testsuites/test.postman_collection.json https://api.getpostman.com/collections/651996-1113039f-c221-489a-a9aa-a01df5dafc61
+#     - npm install --save https://github.com/dparra0007/newman-reporter-winston/tarball/master
+#     - npm install
+#     - serverless deploy -v
+#     - serverless invoke -f run-newman-test
+#     - cd ..
+
+#     - aws cloudformation delete-stack --stack-name $CI_PROJECT_NAME
+#   when: manual
+
+deploy_staging:
+  stage: deploy
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:1.0.0
+  before_script:
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
+    - export AWS_DEFAULT_REGION="us-west-1"
+  script:
+    - ansible-playbook ./infrastructure/site.yml --tags provision,setup
+  environment:
+    name: staging
+
+rollback_staging:
+  stage: regression test deploy
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:1.0.0
+  before_script:
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
+    - export AWS_DEFAULT_REGION="us-west-1"
+  script:
+    - ansible-playbook ./infrastructure/site.yml --tags deprovision
+  environment:
+    name: staging
+  when: manual
