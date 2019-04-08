@@ -16,7 +16,6 @@
       template_parameters:
         KeyName: "{{ keyname }}"
         AMI: "{{ ami }}"
-        GroupName: "{{ groupname }}"
     register: stack
 
   - name: Get facts about the newly created instances
