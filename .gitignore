@@ -6,6 +6,5 @@ node_modules/
 .idea
 .sass-cache
 Thumbs.db
-*.pem
 *.output-virtualbox-iso/
 .serverless/
