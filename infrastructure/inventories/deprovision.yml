@@ -10,3 +10,4 @@
     cloudformation:
       stack_name: "{{ stackname }}"
       state: "absent"
+      region: "{{ ec2region }}"
