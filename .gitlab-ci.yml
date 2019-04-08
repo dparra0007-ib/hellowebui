@@ -62,27 +62,18 @@ build_code:
 
 deploy_staging:
   stage: deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:1.0.0
-  before_script:
-    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
-    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
-    - export AWS_DEFAULT_REGION="us-west-1"
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.0.0
   script:
-    - cd ./infrastructure
-    - ansible-playbook site.yml --tags provision,setup
+    - tower-cli job launch --job-template site-prov
   environment:
     name: staging
 
 rollback_staging:
   stage: regression test deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:1.0.0
-  before_script:
-    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
-    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
-    - export AWS_DEFAULT_REGION="us-west-1"
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.0.0
   script:
     - cd ./infrastructure
-    - ansible-playbook site.yml --tags deprovision
+    - tower-cli job launch --job-template site-deprov
   environment:
     name: staging
   when: manual
