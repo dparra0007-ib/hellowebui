@@ -12,7 +12,7 @@
       state: "present"
       region: "{{ ec2region }}"
       disable_rollback: true
-      template: "aws.template"
+      template: "{{ awstemplate }}"
       template_parameters:
         KeyName: "{{ keyname }}"
         AMI: "{{ ami }}"
