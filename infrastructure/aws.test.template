@@ -36,6 +36,19 @@
 
   },
 
+  "Mappings": {
+    "AWSRegionAMIEC2" : {
+      "us-east-1"        : {"CentOS" : "ami-02eac2c0129f6376b"},
+      "us-west-2"        : {"CentOS" : "ami-01ed306a12b7d1c96"},
+      "us-west-1"        : {"CentOS" : "ami-074e2d6769f445be5"},
+      "eu-west-1"        : {"CentOS" : "ami-0ff760d16d9497662"},
+      "eu-central-1"     : {"CentOS" : "ami-04cf43aca3e6f3de3"},
+      "ap-northeast-1"   : {"CentOS" : "ami-045f38c93733dd48d"},
+      "ap-southeast-1"   : {"CentOS" : "ami-0b4dd9d65556cac22"},
+      "ap-southeast-2"   : {"CentOS" : "ami-08bd00d7713a39e7d"}
+    }
+  },
+
   "Resources" : {
     "VPC": {
 			"Type": "AWS::EC2::VPC",
@@ -106,6 +119,18 @@
       }
     },
 
+    "EC2SeleniumInstance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "SecurityGroupIds" : [ { "Ref" : "InstanceSecurityGroup" } ],
+        "SubnetId" : { "Ref" : "SubnetA" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "ImageId" : {"Fn::FindInMap": [ "AWSRegionAMIEC2", { "Ref": "AWSRegion" },"CentOS"]},
+        "Tags" : [ {"Key" : "Role", "Value" : "Test Instance"}]
+      }
+    },
+
     "InstanceSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
@@ -115,6 +140,18 @@
           "IpProtocol" : "tcp",
           "FromPort" : "22",
           "ToPort" : "22",
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "tcp",
+          "FromPort" : "4444",
+          "ToPort" : "4444",
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "tcp",
+          "FromPort" : "5555",
+          "ToPort" : "5555",
           "CidrIp" : "0.0.0.0/0"
         },
         {

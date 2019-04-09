@@ -1,8 +1,8 @@
 ---
 - name: Ensure apache server is present and running with example home page
+  tags:
+      - setup
   hosts: web
   become: yes
   roles:
     - role: apache-simple
-  tags:
-    - setup
