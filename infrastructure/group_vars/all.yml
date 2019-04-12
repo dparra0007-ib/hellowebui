@@ -1,7 +1,7 @@
 ---
 # inventories/group_vars/back-end-servers
 ec2region : "us-west-1"
-awstemplate : "aws.template"
+#awstemplate : "aws.template"
 stackname: "HelloWebui"
 keyname: "hellowebui_key"
 ami: "ami-070a1367"

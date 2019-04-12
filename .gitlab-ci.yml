@@ -74,7 +74,7 @@ deploy_staging:
     - tower-cli config password $TOWER_CLI_PASSWORD
     - tower-cli config verify_ssl false
   script:
-    - tower-cli job launch --job-template site-prov
+    - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.template"
   environment:
     name: staging
 
