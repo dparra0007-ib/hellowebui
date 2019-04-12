@@ -8,7 +8,7 @@ stages:
 - build code
 - test code
 # - build image
-# - test
+- test
 - deploy
 - regression test deploy
 
@@ -65,18 +65,22 @@ build_code:
 #     - aws cloudformation delete-stack --stack-name $CI_PROJECT_NAME
 #   when: manual
 
-# functional_test_service:
-#   stage: test
-#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
-#   before_script:
-#     - tower-cli config host $TOWER_CLI_HOST
-#     - tower-cli config username $TOWER_CLI_USERNAME
-#     - tower-cli config password $TOWER_CLI_PASSWORD
-#     - tower-cli config verify_ssl false
-#   script:
-#     - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.test.template"
-#   environment:
-#     name: development
+functional_test_service:
+  stage: test
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  before_script:
+    - tower-cli config host $TOWER_CLI_HOST
+    - tower-cli config username $TOWER_CLI_USERNAME
+    - tower-cli config password $TOWER_CLI_PASSWORD
+    - tower-cli config verify_ssl false
+  script:
+    - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.test.template"
+
+    - apk add --update maven
+    - mvn clean package -f ./hellowebui-functional-test
+    - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+    - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+    - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar SUT_IP TESTER_IP
 
 deploy_staging:
   stage: deploy

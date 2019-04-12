@@ -22,13 +22,13 @@ public class SeleniumService {
 
     private static Logger LOG = LoggerFactory.getLogger(SeleniumService.class);
 
-    public void run(String ip) throws Exception {
+    public void run(String sutIP, String testServerIP) throws Exception {
 		//WebDriver driver = new ChromeDriver();
-		WebDriver driver = new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"),
-				new DesiredCapabilities("firefox", "", Platform.MAC));
+		WebDriver driver = new RemoteWebDriver(new URL("http://" + testServerIP + ":4444/wd/hub"),
+				new DesiredCapabilities("firefox", "", Platform.LINUX));
 		
         //driver.get("http://52.53.204.53");
-        driver.get("http://" + ip);
+        driver.get("http://" + sutIP);
 		
 		WebElement maindivelement = driver.findElement(By.className("container"));
 		List<WebElement> paras = maindivelement.findElements(By.tagName("p"));
