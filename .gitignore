@@ -13,3 +13,4 @@ Thumbs.db
 *.project
 *.classpath
 *target/
+*bin/
