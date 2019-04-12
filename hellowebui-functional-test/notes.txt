@@ -1,0 +1,139 @@
+	<dependencies>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-java</artifactId>
+			<version>3.4.0</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.6.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+
+System.setProperty("webdriver.gecko.driver", "C:/dev/tools/geckodriver.exe");
+		
+///////////////////////////////////////
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Radio Color Buttons</title>
+</head>
+<body>
+
+	<form>
+		<input type="radio" name="color" value="red" checked>Red<br>
+		<input type="radio" name="color" value="green">Green<br>
+		<input type="radio" name="color" value="blue">Blue
+	</form>
+	
+</body>
+</html>
+
+///////////////////////////////////////
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Checkboxes</title>
+</head>
+<body>
+
+	<form>
+		<input type="checkbox" id="mayoCheckbox" value="mayo"> Mayo<br>
+  		<input type="checkbox" id="lettuceCheckbox" value="lettuce"> Lettuce<br>
+  		<input type="checkbox" id="turkeyCheckbox" value="turkey"> Turkey
+	</form>
+	
+</body>
+</html>
+
+///////////////////////////////////////
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Select Item</title>
+</head>
+<body>
+
+	<form>
+		<select id="select1">
+			<option value="yes">Yes</option>
+			<option value="no">No</option>
+			<option value="maybe">Maybe</option>
+		</select>
+	</form>
+	
+</body>
+</html>
+
+///////////////////////////////////////
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Table</title>
+</head>
+<body>
+
+	<table>
+		<tr>
+			<td>Table 1 Row 1</td>
+			<td>
+				<table>
+					<tr><td>Table 2 Row 1</td></tr>
+					<tr><td>Table 2 Row 2</td></tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+	
+</body>
+</html>
+
+///////////////////////////////////////
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Table</title>
+</head>
+<body>
+
+	<table>
+		<tr>
+			<td>Table 1 Row 1</td>
+			<td>
+				<table>
+					<tr><td>Table 2 Row 1</td></tr>
+					<tr><td>Table 2 Row 2</td></tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+	
+</body>
+</html>
+
+///////////////////////////////////////		
+
+/html/body/table/tbody/tr/td[2]/table/tbody/tr[2]/td
+		
+		

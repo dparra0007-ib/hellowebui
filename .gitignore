@@ -8,3 +8,8 @@ node_modules/
 Thumbs.db
 *.output-virtualbox-iso/
 .serverless/
+.vscode/
+.settings/
+*.project
+*.classpath
+*target/

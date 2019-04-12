@@ -3,65 +3,41 @@
   tags:
     - setup-test
   hosts: test
-  become: yes
+  become: true
 
   roles:
     - role: geerlingguy.java
-      when: "ansible_os_family == 'CentOS'"
+      when: "ansible_os_family == 'RedHat'"
       java_packages:
         - java-1.8.0-openjdk
+    - role: selenium
 
-  post_tasks:
-  - name: install firefox and dependencies
-    yum:
-      name:
-        - firefox
-        - Xvfb
-        - libXfont
-        - Xorg
-      state: present
-
-  - name: install the 'X Window System' package group
-    yum:
-      name: "@X Window System"
-      state: present
-
-  - name: install the 'GNOME Desktop' package group
-    yum:
-      name: "@^gnome-desktop-environment"
-      state: present
-  
-  # - name: install the 'Desktop' package group
+  # pre_tasks:
+  # - name: install firefox and dependencies
   #   yum:
-  #     name: "@Desktop"
+  #     name:
+  #       - firefox
+  #       - Xvfb
+  #       - libXfont
+  #       - Xorg
   #     state: present
 
-  - name: install the 'Fonts' package group
-    yum:
-      name: "@Fonts"
-      state: present
-
-  # - name: install the 'General Purpose Desktop' package group
+  # - name: install the 'X Window System' package group
   #   yum:
-  #     name: "@General Purpose Desktop"
+  #     name: "@X Window System"
   #     state: present
 
-  - name: Launch an XWindows Virtual Frame Buffer(XVFB) session on display port 99
-    shell: Xvfb :99 -ac -screen 0 1280x1024x24 &
-    args:
-      executable: /bin/bash
+  # - name: install the 'GNOME Desktop' package group
+  #   yum:
+  #     name: "@^gnome-desktop-environment"
+  #     state: present
 
-  - name: Tell all XWindows applications in this terminal session to use the new Xvfb display port
-    shell: export DISPLAY=:99
-    args:
-      executable: /bin/bash
+  # - name: install the 'Fonts' package group
+  #   yum:
+  #     name: "@Fonts"
+  #     state: present
 
-  - name: Download Selenium
-    get_url:
-      url: http://selenium-release.storage.googleapis.com/3.9/selenium-server-standalone-3.9.1.jar
-      dest: /var/
-
-  - name: Run selenium server
-    shell: nohup java -jar /var/selenium-server-standalone-3.9.1.jar &
-    args:
-      executable: /bin/bash
+  # - name: Launch an XWindows Virtual Frame Buffer(XVFB) session on display port 99
+  #   shell: Xvfb :99 -ac -screen 0 1280x1024x24 &
+  #   args:
+  #     executable: /bin/bash
