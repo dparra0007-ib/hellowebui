@@ -8,7 +8,7 @@ stages:
 - build code
 - test code
 # - build image
-# - test image
+# - test
 - deploy
 - regression test deploy
 
@@ -64,6 +64,19 @@ build_code:
 
 #     - aws cloudformation delete-stack --stack-name $CI_PROJECT_NAME
 #   when: manual
+
+# functional_test_service:
+#   stage: test
+#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+#   before_script:
+#     - tower-cli config host $TOWER_CLI_HOST
+#     - tower-cli config username $TOWER_CLI_USERNAME
+#     - tower-cli config password $TOWER_CLI_PASSWORD
+#     - tower-cli config verify_ssl false
+#   script:
+#     - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.test.template"
+#   environment:
+#     name: development
 
 deploy_staging:
   stage: deploy
