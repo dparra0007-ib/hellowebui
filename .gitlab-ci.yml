@@ -67,7 +67,7 @@ build_code:
 
 functional_test_service:
   stage: test
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.1
   before_script:
     - tower-cli config host $TOWER_CLI_HOST
     - tower-cli config username $TOWER_CLI_USERNAME
@@ -81,7 +81,7 @@ functional_test_service:
     - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar SUT_IP TESTER_IP
 
-    # - tower-cli job launch --job-template site-deprov --extra-vars="stackname=HelloWebuiTest"
+    # - tower-cli job launch --job-template site-deprov --extra-vars="stackname=HelloWebuiTest" --wait
 
 # deploy_staging:
 #   stage: deploy
