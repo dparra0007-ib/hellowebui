@@ -69,21 +69,21 @@ build_code:
 functional_test_service:
   stage: test
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.1
+  variables:
+    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
   before_script:
     - tower-cli config host $TOWER_CLI_HOST
     - tower-cli config username $TOWER_CLI_USERNAME
     - tower-cli config password $TOWER_CLI_PASSWORD
     - tower-cli config verify_ssl false
-
-    - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-    - AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
   script:
-    - tower-cli job launch --job-template site-prov --extra-vars="ec2region=$AWS_REGION awstemplate=aws.test.template stackname=HelloWebuiTest" --wait
+    #- tower-cli job launch --job-template site-prov --extra-vars="ec2region=$AWS_REGION awstemplate=aws.test.template stackname=HelloWebuiTest" --wait
 
-    - mvn clean package -f ./hellowebui-functional-test
+    #- mvn clean package -f ./hellowebui-functional-test
     - SUT_IP="$(aws ec2 describe-instances --region $AWS_REGION --filters "Name=tag:Role,Values=Core Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - TESTER_IP="$(aws ec2 describe-instances --region $AWS_REGION --filters "Name=tag:Role,Values=Test Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
-    - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar SUT_IP TESTER_IP
+    #- java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar SUT_IP TESTER_IP
 
     # - tower-cli job launch --job-template site-deprov --extra-vars="ec2region=$AWS_REGION stackname=HelloWebuiTest" --wait
 
