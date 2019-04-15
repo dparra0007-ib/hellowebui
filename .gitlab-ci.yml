@@ -67,45 +67,46 @@ build_code:
 
 functional_test_service:
   stage: test
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.0
   before_script:
     - tower-cli config host $TOWER_CLI_HOST
     - tower-cli config username $TOWER_CLI_USERNAME
     - tower-cli config password $TOWER_CLI_PASSWORD
     - tower-cli config verify_ssl false
   script:
-    - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.test.template"
+    - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.test.template stackname=HelloWebuiTest"
 
-    - apk add --update maven
     - mvn clean package -f ./hellowebui-functional-test
     - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar SUT_IP TESTER_IP
 
-deploy_staging:
-  stage: deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
-  before_script:
-    - tower-cli config host $TOWER_CLI_HOST
-    - tower-cli config username $TOWER_CLI_USERNAME
-    - tower-cli config password $TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
-  script:
-    - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.template"
-  environment:
-    name: staging
+    # - tower-cli job launch --job-template site-deprov --extra-vars="stackname=HelloWebuiTest"
 
-rollback_staging:
-  stage: regression test deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
-  before_script:
-    - tower-cli config host $TOWER_CLI_HOST
-    - tower-cli config username $TOWER_CLI_USERNAME
-    - tower-cli config password $TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
-  script:
-    - cd ./infrastructure
-    - tower-cli job launch --job-template site-deprov
-  environment:
-    name: staging
-  when: manual
+# deploy_staging:
+#   stage: deploy
+#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+#   before_script:
+#     - tower-cli config host $TOWER_CLI_HOST
+#     - tower-cli config username $TOWER_CLI_USERNAME
+#     - tower-cli config password $TOWER_CLI_PASSWORD
+#     - tower-cli config verify_ssl false
+#   script:
+#     - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.template stackname=HelloWebui"
+#   environment:
+#     name: staging
+
+# rollback_staging:
+#   stage: regression test deploy
+#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+#   before_script:
+#     - tower-cli config host $TOWER_CLI_HOST
+#     - tower-cli config username $TOWER_CLI_USERNAME
+#     - tower-cli config password $TOWER_CLI_PASSWORD
+#     - tower-cli config verify_ssl false
+#   script:
+#     - cd ./infrastructure
+#     - tower-cli job launch --job-template site-deprov --extra-vars="stackname=HelloWebui"
+#   environment:
+#     name: staging
+#   when: manual
