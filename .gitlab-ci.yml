@@ -74,11 +74,11 @@ functional_test_service:
     - tower-cli config password $TOWER_CLI_PASSWORD
     - tower-cli config verify_ssl false
   script:
-    - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.test.template stackname=HelloWebuiTest"
+    - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.test.template stackname=HelloWebuiTest" --wait
 
     - mvn clean package -f ./hellowebui-functional-test
-    - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
-    - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+    - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+    - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar SUT_IP TESTER_IP
 
     # - tower-cli job launch --job-template site-deprov --extra-vars="stackname=HelloWebuiTest"
@@ -92,7 +92,7 @@ functional_test_service:
 #     - tower-cli config password $TOWER_CLI_PASSWORD
 #     - tower-cli config verify_ssl false
 #   script:
-#     - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.template stackname=HelloWebui"
+#     - tower-cli job launch --job-template site-prov --extra-vars="awstemplate=aws.template stackname=HelloWebui" --wait
 #   environment:
 #     name: staging
 
@@ -106,7 +106,7 @@ functional_test_service:
 #     - tower-cli config verify_ssl false
 #   script:
 #     - cd ./infrastructure
-#     - tower-cli job launch --job-template site-deprov --extra-vars="stackname=HelloWebui"
+#     - tower-cli job launch --job-template site-deprov --extra-vars="stackname=HelloWebui" --wait
 #   environment:
 #     name: staging
 #   when: manual
