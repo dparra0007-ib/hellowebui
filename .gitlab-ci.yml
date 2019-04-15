@@ -74,6 +74,9 @@ functional_test_service:
     - tower-cli config username $TOWER_CLI_USERNAME
     - tower-cli config password $TOWER_CLI_PASSWORD
     - tower-cli config verify_ssl false
+
+    - set AWS_ACCESS_KEY_ID $AWS_ACCESS_KEY_ID
+    - set AWS_SECRET_ACCESS_KEY $AWS_SECRET_ACCESS_KEY
   script:
     - tower-cli job launch --job-template site-prov --extra-vars="ec2region=$AWS_REGION awstemplate=aws.test.template stackname=HelloWebuiTest" --wait
 
