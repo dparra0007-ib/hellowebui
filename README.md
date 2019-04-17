@@ -1,78 +1,85 @@
-# cloud-aws
+# HELLOWEBUI
 
-This intermediate-level Ansible playbook example demonstrates the common tasks for provisioning EC2 server instances into an Amazon Web Services VPC. Once provisioned this example will use an existing role (apache-role) to deploy and setup an application service on the instances in the stack.
+This project is a reference implementation of dynamic infrastructure based application.
 
-This example demonstrates a few other best practices and intermediate techniques:
+## Functional Description
 
-* **Compound Playbook.** This example shows the use of a playbook, `site.yml`, combining other playbooks, `provision.yml` and `setup.yml`, using play level 'include' statements. Splitting provisioning and configuration plays into separate files is a recommended best practice. By doing so, users have more flexibility to what the run without needing tags and wrapping blocks of tasks with conditionals. This separation can be used to promote reuse, but enabling the mixing and matching of various playbooks.
-* **Controlling Debug Message Display.** There is a debug task in `provison.yml` using the optional `verbosity` parameter. Avoiding the unnecessary display of debugging messages avoids confusion and is just good hygiene. In this implementation, the debug message won't be displayed unless the playbook is run in verbose mode level 1 or greater.
+The hollowebui application is just web user interface application to how a front page with an static content.
 
-## Requirements
+## Technical Overview
 
-To use this example you will need to have an AWS account setup and properly configured on your control machine. You will also need the boto, boto3 and botocore modules installed. See the [Ansible AWS Guide](http://docs.ansible.com/ansible/guide_aws.html) for more details.
+### Architecture
 
-## Variables
+The application represents an concrete implementation of web user interface application running in a web service hosted in a web server.
 
-Before running this playbook example, you should know about what variables it uses and how they effect the execution of the AWS provisioning process.
+The concrete implementation is based on just static content and a frontend application implemented in Angular.
 
-### Required
+### Wider Technical Context
 
-The following variables must be properly set for this example to run properly.
+The deployment model used by this application is dynamic infrastructure implemented by Ansible engine and tower for configuration management of servers, and cloudformation for provisioning.
 
-* `ec2_stack_name`: A unique name for your application stack. The stack name is used as a prefix for many other resources that will get created using this playbook.
+### Common Data Model and Contract
 
-* `ec2_region`: A valid AWS region name such as "us-east-2" or "ap-southeast-1" or "eu-west-2."
 
-* `ec2_key_name`: An existing AWS keyname from your account to use when provisioning instances.
+### Configuration
 
-### Optional
 
-There are a few other variables present whose value you can override if needed.
+### Logging & Monitoring
 
-* `ec2_az`: The EC2 availability zone to use in the region. Default: a
 
-* `ec2_vpcidr`: The VPC CIDR value. Default: 10.251.0.0/16
+## Development Pipeline
 
-* `ec2_subnetcidr`: The VPC Subnet CIDR value. Default: 10.251.1.0/24
+Development workflow is versioned with the rest of the code with the continuous integration/delivery pipeline definition in the file .gitlab-ci.yml. That way, not only the application code and the infrastructure code is part of the solution package, the development workflow itself is part of that package and managed with the rest of the artefacts.
 
-* `ec2_exact_count`: The number of EC2 instances that should be present. Using the `ec2` module, this playbook will create and terminate instances as needed. Default: 1
+The core concepts of standard pipelines and specially the .gitlab-ci pipeline is described in the ["introduction to pipelines and jobs"](https://docs.gitlab.com/ee/ci/pipelines.html) online document.
 
-* `ec2_private_key_file`: The path to the private key associated with the `ec2_key_name` used to launch the instances if you need it. If undefined, it is omitted from dynamic inventory group "web".
+In the concrete case of this application there are defined seven stages:
 
-## Usage
+- build code. It's the stage where each fronted service code is compiled, with the added dependencies declared as part of them.
+- test code. The application code is unit and integration tested. Moreover, static analysis security tests are performed in this stage.
+- build application. In this stage, application templates are build putting the already compiled service code inside the infrastructure image and templated.
+- test application. Infrastructure and service code, all as part of the templated image that is the application is functional and performance tested. Test environments are automatically provided by the pipeline job through [ansible playbook test](https://gitlab.com/IAG-DEV/GLP/hellowebui/blob/master/infrastructure/provision-test.yml) and the cloudformation definition for testing [aws.test.template](https://gitlab.com/IAG-DEV/GLP/hellowebui/blob/master/infrastructure/aws.test.template) for functional testing.
+- push templates. All application templates being built and tested are versioned and pushed to production template repositories.
+- deploy application. In this stage, the deployment jobs put correct templates to defined host enviroments. In this concrete example, the host is AWS cloud.
+- regression test deploy. To enable continous delivery, a final stage with regresstion testing and rollback if test are not satisfy can be defined in the pipeline. In this case, only the regression test that is the previous functional test with production configuration agaisnt production enviroment.
 
-To execute this example, use the `site.yml` playbook and pass in all the required variables:
+### Testing
 
+As we could see in previous section, there are defined five types of testing:
+
+- unit and integration testing. In test code stage.
+
+- static code analysis. In test code stage
+
+- static analysis security tests. In test code stage.
+
+- functional testing. In test application stage.
+ Driven by Selenium in the hellowebui-funcitonal-test project written in java with Selenium Web Drive.
+
+ ```
+functional_test_service:
+  stage: test application
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.1
+  before_script:
+    - tower-cli config host $TOWER_CLI_HOST
+    - tower-cli config username $TOWER_CLI_USERNAME
+    - tower-cli config password $TOWER_CLI_PASSWORD
+    - tower-cli config verify_ssl false
+
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
+    - export AWS_DEFAULT_REGION="us-west-1"
+  script:
+    - tower-cli job launch --job-template site-prov --extra-vars="ec2region=$AWS_DEFAULT_REGION awstemplate=aws.test.template stackname=HelloWebuiTest deploymentenv=staging" --wait
+
+    - mvn clean package -f ./hellowebui-functional-test
+    - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+    - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+    - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar $SUT_IP $TESTER_IP
+
+    - tower-cli job launch --job-template site-deprov --extra-vars="ec2region=$AWS_DEFAULT_REGION stackname=HelloWebuiTest"
 ```
-ansible-playbook site.yml -e "ec2_stack_name=lightbulb ec2_region=us-east-2 ec2_key_name=engima"
-```
 
-Using verbose mode of any type will emit a debugging message that displays information about the provisioned instances in the stack.
+- performance testing. In test application stage.
 
-```
-ansible-playbook site.yml -e "ec2_stack_name=lightbulb ec2_region=us-east-2 ec2_key_name=engima" -v
-```
-
-Remember you can put your variables in a YAML formatted file and feed it into the play with the @ operator.
-
-```
-ansible-playbook site.yml -e @extra_vars.yml
-```
-
-Ansible as Infrastructure provider works with procedural templates that doesn't maintaine the state. This means that there is no default management of incremental deployments or rollbacks. They have to ba managed scripting in bash or any scripting programming language. In this example, the rollback has to be done manually.
-
-### Usage with clodformation
-
-There are specific tools for provisioning like cloudformation for aws or terraform for several cloud providers.
-
-ansible-playbook site.yml --tags provision,setup
-
-ansible-playbook site.yml --tags deprovision
-
-### One More Thing
-
-Since we are reusing the apache-simple roles from `examples/apache-role`, we can override the default value of `apache_test_message` to change the message that gets inserted onto the generated home page by the role.
-
-```
-ansible-playbook site.yml -e "ec2_stack_name=lightbulb ec2_region=us-west-1 ec2_key_name=hellowebui_key ec2_az=b ec2_private_key_file=hellowebui_key.pem"
-```
+- regression testing. In regression test stage.

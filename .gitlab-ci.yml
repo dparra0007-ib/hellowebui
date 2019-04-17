@@ -7,8 +7,9 @@ services:
 stages:
 - build code
 - test code
-# - build image
-- test
+# - build application
+# - push templates
+- test application
 - deploy
 - regression test deploy
 
@@ -23,7 +24,7 @@ build_code:
     - cp ./hellowebui/index.html ./infrastructure/roles/apache-simple/templates/index.html.j2
 
 # build_service:
-#   stage: build image
+#   stage: build application
 #   image: iaghcp-docker-technical-architecture.jfrog.io/packer:1.0.0
 #   script:
 #     - cd ./gofrontend
@@ -37,36 +38,31 @@ build_code:
 #   tags:
 #     - iaas
 
-# functional_test_service:
-#   stage: test image
-#   #image: infrastructureascode/aws-cli:1.14.14
-#   image: iaghcp-docker-technical-architecture.jfrog.io/docker-serverless:1.0.0
-#   before_script:
-#     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
-#     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
-#     - export AWS_DEFAULT_REGION="us-west-2"
-#   script:
-#     - cp ./aws.template ./aws-$CI_PIPELINE_ID-$CI_JOB_ID.template
-#     - aws s3 cp ./aws-$CI_PIPELINE_ID-$CI_JOB_ID.template s3://glp-workspace-gitlab-ci/
-#     - AMI="$(aws ec2 describe-images --filters Name=tag-key,Values=version Name=tag-value,Values=$CI_PIPELINE_ID --query 'Images[*].{ID:ImageId}' --output text)"
-#     - aws cloudformation deploy --template-file ./aws-$CI_PIPELINE_ID-$CI_JOB_ID.template --stack-name $CI_PROJECT_NAME --parameter-overrides 'InstanceType=t2.micro' 'KeyName=MiddleTier' "AMI=$AMI"
-    
-#     - PUBLIC_IP="$(aws ec2 describe-instances --filters "Name=tag-key,Values=aws:cloudformation:stack-name" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
-#     - sed -i -e "s/{{PUBLIC_IP}}/$PUBLIC_IP/g" ./gofrontend-functional-test/config/default.json
+static_test_service:
+  stage: test code
+  image: iaghcp-docker-technical-architecture.jfrog.io/sonar-scanner/ansible:1.0.0
+  # variables:
+  #   PROJECT_KEY: "$CI_PROJECT_NAMESPACE:$CI_PROJECT_NAME"
+  script:
+    - ansible-lint ./infrastructure/site.yml
+    # Sonarcloud doesn't support ansible lint, but sonarqube does.
+    # Until being provided by sonarqube, the scan will be done without conar integration
+    # - sonar-scanner
+    #  -Dsonar.projectKey=${PROJECT_KEY//[\/]/_} 
+    #  -Dsonar.projectName=$CI_PROJECT_NAME 
+    #  -Dsonar.branch=$CI_COMMIT_REF_NAME 
+    #  -Dsonar.projectVersion=$CI_JOB_ID 
+    #  -Dsonar.sources=./ 
+    #  -Donar.eslint.reportPaths=report.json 
+    #  -Dsonar.gitlab.project_id=$CI_PROJECT_ID 
+    #  -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA 
+    #  -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME
+  except:
+    - triggers
 
-#     - cd ./gofrontend-functional-test
-#     - wget --header="X-Api-Key:${POSTMAN_API_KEY}" -O ./testsuites/test.postman_collection.json https://api.getpostman.com/collections/651996-1113039f-c221-489a-a9aa-a01df5dafc61
-#     - npm install --save https://github.com/dparra0007/newman-reporter-winston/tarball/master
-#     - npm install
-#     - serverless deploy -v
-#     - serverless invoke -f run-newman-test
-#     - cd ..
-
-#     - aws cloudformation delete-stack --stack-name $CI_PROJECT_NAME
-#   when: manual
 
 functional_test_service:
-  stage: test
+  stage: test application
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.1
   before_script:
     - tower-cli config host $TOWER_CLI_HOST
@@ -78,7 +74,7 @@ functional_test_service:
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - tower-cli job launch --job-template site-prov --extra-vars="ec2region=$AWS_DEFAULT_REGION awstemplate=aws.test.template stackname=HelloWebuiTest" --wait
+    - tower-cli job launch --job-template site-prov --extra-vars="ec2region=$AWS_DEFAULT_REGION awstemplate=aws.test.template stackname=HelloWebuiTest deploymentenv=staging" --wait
 
     - mvn clean package -f ./hellowebui-functional-test
     - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
@@ -98,7 +94,7 @@ deploy_staging:
 
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - tower-cli job launch --job-template site-prov --extra-vars="ec2region=$AWS_DEFAULT_REGION awstemplate=aws.template stackname=HelloWebui" --wait
+    - tower-cli job launch --job-template site-prov --extra-vars="ec2region=$AWS_DEFAULT_REGION awstemplate=aws.template stackname=HelloWebui deploymentenv=staging" --wait
   environment:
     name: staging
 

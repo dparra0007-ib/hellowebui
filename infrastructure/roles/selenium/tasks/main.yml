@@ -12,6 +12,7 @@
   yum:
     name: "@X Window System"
     state: present
+  register: 'xvfb_check_os_distribution_vars'
 
 - name: install the 'GNOME Desktop' package group
   yum:
@@ -27,6 +28,7 @@
   shell: Xvfb :99 -ac -screen 0 1280x1024x24 &
   args:
     executable: /bin/bash
+  when: "xvfb_check_os_distribution_vars.stat.exists"
 
 - name: Extract geckodriver-v0.24.0-linux64.tar.gz into /usr/local/bin
   unarchive:
