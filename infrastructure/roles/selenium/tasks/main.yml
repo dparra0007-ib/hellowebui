@@ -28,7 +28,7 @@
   shell: Xvfb :99 -ac -screen 0 1280x1024x24 &
   args:
     executable: /bin/bash
-  when: "xvfb_check_os_distribution_vars.stat.exists"
+  when: "xvfb_check_os_distribution_vars"
 
 - name: Extract geckodriver-v0.24.0-linux64.tar.gz into /usr/local/bin
   unarchive:
