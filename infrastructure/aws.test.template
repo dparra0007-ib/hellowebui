@@ -121,7 +121,7 @@
         "SubnetId" : { "Ref" : "SubnetA" },
         "KeyName" : { "Ref" : "KeyName" },
         "ImageId" : { "Ref" : "AMI" },
-        "Tags" : [ {"Key" : "Role", "Value" : "Core Instance"}, {"Key" : "environment", "Value" : { "Ref" : "Test" }}]
+        "Tags" : [ {"Key" : "Role", "Value" : "Core Instance"}, {"Key" : "environment", "Value" : { "Ref" : "Environment" }}]
       }
     },
 
@@ -133,7 +133,7 @@
         "SubnetId" : { "Ref" : "SubnetA" },
         "KeyName" : { "Ref" : "KeyName" },
         "ImageId" : {"Fn::FindInMap": [ "AWSRegionAMIEC2", { "Ref": "AWSRegion" },"CentOS"]},
-        "Tags" : [ {"Key" : "Role", "Value" : "Test Instance"}, {"Key" : "environment", "Value" : { "Ref" : "Test" }}]
+        "Tags" : [ {"Key" : "Role", "Value" : "Test Instance"}, {"Key" : "environment", "Value" : { "Ref" : "Environment" }}]
         
       }
     },
