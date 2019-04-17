@@ -25,6 +25,12 @@
       "ConstraintDescription" : "must be a valid EC2 instance type."
     },
 
+    "Environment" : {
+      "Description" : "Tag to define the deployment environment",
+      "Type" : "String",
+      "ConstraintDescription" : "Deployment environment."
+    },
+
     "AWSRegion" : {
       "Description" : "AWS Region",
       "Type" : "String",
@@ -130,12 +136,6 @@
         "Tags" : [ {"Key" : "Role", "Value" : "Test Instance"}, {"Key" : "environment", "Value" : { "Ref" : "Test" }}]
         
       }
-    },
-
-    "Environment" : {
-      "Description" : "Tag to define the deployment environment",
-      "Type" : "String",
-      "ConstraintDescription" : "Deployment environment."
     },
 
     "InstanceSecurityGroup" : {
