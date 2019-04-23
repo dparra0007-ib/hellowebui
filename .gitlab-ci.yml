@@ -5,9 +5,9 @@ services:
     alias: docker
 
 stages:
-- build code
+# - build code
 - test code
-# - build application
+- build application
 # - push templates
 - test application
 - deploy
@@ -18,10 +18,10 @@ variables:
   TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
   TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
 
-build_code:
-  stage: build code
-  script:
-    - cp ./hellowebui/index.html ./infrastructure/roles/apache-simple/templates/index.html.j2
+# build_code:
+#   stage: build code
+#   script:
+#     - cp ./hellowebui/index.html ./infrastructure/roles/apache-simple/templates/index.html.j2
 
 # build_service:
 #   stage: build application
@@ -41,24 +41,26 @@ build_code:
 static_test_service:
   stage: test code
   image: iaghcp-docker-technical-architecture.jfrog.io/sonar-scanner/ansible:1.0.0
-  # variables:
-  #   PROJECT_KEY: "$CI_PROJECT_NAMESPACE:$CI_PROJECT_NAME"
   script:
     - ansible-lint ./infrastructure/site.yml
-    # Sonarcloud doesn't support ansible lint, but sonarqube does.
-    # Until being provided by sonarqube, the scan will be done without conar integration
-    # - sonar-scanner
-    #  -Dsonar.projectKey=${PROJECT_KEY//[\/]/_} 
-    #  -Dsonar.projectName=$CI_PROJECT_NAME 
-    #  -Dsonar.branch=$CI_COMMIT_REF_NAME 
-    #  -Dsonar.projectVersion=$CI_JOB_ID 
-    #  -Dsonar.sources=./ 
-    #  -Donar.eslint.reportPaths=report.json 
-    #  -Dsonar.gitlab.project_id=$CI_PROJECT_ID 
-    #  -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA 
-    #  -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME
+    - ansible-lint ./infrastructure/build.yml
   except:
     - triggers
+
+build_application:
+  stage: build application
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  before_script:
+    - tower-cli config host $TOWER_CLI_HOST
+    - tower-cli config username $TOWER_CLI_USERNAME
+    - tower-cli config password $TOWER_CLI_PASSWORD
+    - tower-cli config verify_ssl false
+
+    - export AWS_DEFAULT_REGION="us-west-1"
+  script:
+    - tower-cli job launch --job-template site-build --extra-vars="cli_ec2region=us-west-1 cli_aminame=hellowebui cli_version=$CI_PIPELINE_ID" --wait
+  environment:
+    name: staging
 
 
 functional_test_service:
