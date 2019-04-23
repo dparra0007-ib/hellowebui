@@ -8,24 +8,24 @@
   tasks:
   - name: create a cloudformation stack
     cloudformation:
-      stack_name: "{{ stackname }}"
+      stack_name: "{{ cli_stackname }}"
       state: "present"
-      region: "{{ ec2region }}"
+      region: "{{ cli_ec2region }}"
       disable_rollback: true
-      template: "{{ awstemplate }}"
+      template: "{{ cli_awstemplate }}"
       template_parameters:
-        KeyName: "{{ keyname }}"
-        AMI: "{{ ami }}"
-        AWSRegion: "{{ ec2region }}"
-        Environment: "{{ deploymentenv }}"
+        KeyName: "{{ g_keyname }}"
+        AMI: "{{ g_ami }}"
+        AWSRegion: "{{ cli_ec2region }}"
+        Environment: "{{ cli_deploymentenv }}"
     register: stack
 
   - name: Get facts about all the newly created instances
     ec2_instance_facts:
-      region: "{{ ec2region }}"
+      region: "{{ cli_ec2region }}"
       filters:
         instance-state-name: running
-        "tag:aws:cloudformation:stack-name": "{{ stackname }}"
+        "tag:aws:cloudformation:stack-name": "{{ cli_stackname }}"
     register: ec2_facts
 
   # - name: Show stack outputs
@@ -43,10 +43,10 @@
 
   - name: Get facts about core instances
     ec2_instance_facts:
-      region: "{{ ec2region }}"
+      region: "{{ cli_ec2region }}"
       filters:
         instance-state-name: running
-        "tag:aws:cloudformation:stack-name": "{{ stackname }}"
+        "tag:aws:cloudformation:stack-name": "{{ cli_stackname }}"
         "tag:Role": "Core Instance"
     register: ec2_core_facts
 
@@ -56,5 +56,5 @@
       groups: web
       ansible_user: centos
       ansible_host: "{{ item.public_ip_address }}"
-      ansible_ssh_private_key_file: "{{ ec2_private_key_file | default(omit) }}"
+      ansible_ssh_private_key_file: "{{ g_ec2_private_key_file | default(omit) }}"
     with_items: "{{ ec2_core_facts.instances }}"

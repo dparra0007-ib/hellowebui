@@ -70,14 +70,14 @@ functional_test_service:
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - tower-cli job launch --job-template site-prov --extra-vars="ec2region=$AWS_DEFAULT_REGION awstemplate=aws.test.template stackname=HelloWebuiTest deploymentenv=staging" --wait
+    - tower-cli job launch --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=HelloWebuiTest cli_deploymentenv=staging" --wait
 
     - mvn clean package -f ./hellowebui-functional-test
     - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar $SUT_IP $TESTER_IP
 
-    - tower-cli job launch --job-template site-deprov --extra-vars="ec2region=$AWS_DEFAULT_REGION stackname=HelloWebuiTest"
+    - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=HelloWebuiTest"
 ```
 
 - performance testing. In test application stage.

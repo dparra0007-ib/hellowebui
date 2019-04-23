@@ -1,8 +1,8 @@
 ---
 # inventories/group_vars/back-end-servers
-# ec2region : "us-west-1"
-# awstemplate : "aws.template"
-# stackname: "HelloWebui"
-keyname: "hellowebui_key"
-ami: "ami-070a1367"
-ec2_private_key_file: "hellowebui_key.pem"
+# cli_ec2region : "us-west-1"
+# cli_awstemplate : "aws.template"
+# cli_stackname: "HelloWebui"
+g_keyname: "hellowebui_key"
+g_ami: "ami-070a1367"
+g_ec2_private_key_file: "hellowebui_key.pem"

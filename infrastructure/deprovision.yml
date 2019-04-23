@@ -8,6 +8,6 @@
   tasks:
   - name: delete a stack
     cloudformation:
-      stack_name: "{{ stackname }}"
+      stack_name: "{{ cli_stackname }}"
       state: "absent"
-      region: "{{ ec2region }}"
+      region: "{{ cli_ec2region }}"
