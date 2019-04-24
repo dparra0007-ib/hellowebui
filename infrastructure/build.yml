@@ -97,18 +97,18 @@
       register: version
 
     # - name: Show stack outputs
-    #   debug: msg="Version {{ version }}"
+    #   debug: msg="Version {{ version[0] }}"
 
     - name: Register AMI
       ec2_ami:
         instance_id: "{{ item.id }}"
         region: "{{ cli_ec2region }}"
         wait: yes
-        name: "{{ g_aminame }}-{{ version }}"
+        name: "{{ g_aminame }}-{{ version[0] }}"
         tags:
           Name: "{{ g_aminame }}"
           Service: Core Instance
-          Version: "{{ version }}"
+          Version: "{{ version[0] }}"
           OpCo: "{{ g_opco }}"
       with_items: "{{ ec2.instances }}"
 

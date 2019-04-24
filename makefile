@@ -24,4 +24,4 @@ ifeq ($(findstring *MAJOR*,$(CI_COMMIT_MESSAGE)),*MAJOR*)
 endif
 	
 version:
-	echo "$(VERSION)"
+	@echo "$(VERSION)"
