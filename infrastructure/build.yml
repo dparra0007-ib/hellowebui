@@ -68,6 +68,7 @@
     - name: Register AMI
       ec2_ami:
         instance_id: "{{ item.id }}"
+        region: "{{ cli_ec2region }}"
         wait: yes
         name: "{{ g_aminame }}-{{ cli_version }}"
         tags:
