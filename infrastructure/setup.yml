@@ -3,10 +3,3 @@
   tags:
       - setup
   hosts: web
-  become: true
-  roles:
-    - role: apache-simple
-
-  tasks:
-    - name: Build locally
-      local_action: command cp ../hellowebui/index.html ./infrastructure/roles/apache-simple/templates/index.html.j2

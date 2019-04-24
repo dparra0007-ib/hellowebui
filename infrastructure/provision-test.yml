@@ -15,8 +15,8 @@
         "tag:Role": "Test Instance"
     register: ec2_test_facts
 
-  - name: Show stack outputs
-    debug: msg="Got instances {{ ec2_test_facts }}"
+  # - name: Show stack outputs
+  #   debug: msg="Got instances {{ ec2_test_facts }}"
 
   - name: Build group of test instances
     add_host:

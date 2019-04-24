@@ -6,6 +6,15 @@
     - provision
 
   tasks:
+  - name: Find last application images
+    ec2_ami_facts:
+      owners: self
+      filters:
+        "tag:Name": "{{ g_aminame }}"
+        "tag:Version": "{{ cli_version }}"
+        "tag:OpCo": "{{ g_opco }}"
+    register: ami_find
+
   - name: create a cloudformation stack
     cloudformation:
       stack_name: "{{ cli_stackname }}"
@@ -15,7 +24,7 @@
       template: "{{ cli_awstemplate }}"
       template_parameters:
         KeyName: "{{ g_keyname }}"
-        AMI: "{{ g_ami }}"
+        AMI: "{{ ami_find.images[0].image_id }}"
         AWSRegion: "{{ cli_ec2region }}"
         Environment: "{{ cli_deploymentenv }}"
     register: stack

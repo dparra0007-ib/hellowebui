@@ -6,3 +6,5 @@
 g_keyname: "hellowebui_key"
 g_ami: "ami-070a1367"
 g_ec2_private_key_file: "hellowebui_key.pem"
+g_opco: "GLP"
+g_aminame: hellowebui
