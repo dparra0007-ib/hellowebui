@@ -65,12 +65,47 @@
         state: stopped
         wait: True
 
+    # add semver to replace cli_version
+    - name: Find application images
+      ec2_ami_facts:
+        owners: self
+        region: "{{ cli_ec2region }}"
+        filters:
+          "tag:Name": "{{ g_aminame }}"
+          "tag:OpCo": "{{ g_opco }}"
+      register: ami_find
+
+    # - name: Show stack outputs
+    #   debug: msg="Got instances {{ ami_find.images }}"
+
+    - name: Now get the latest one
+      set_fact:
+        latest_ami: >
+          {{ ami_find.images | sort(attribute='tags.Version') | last }}
+      register: ami
+
+    # - name: Show stack outputs
+    #   debug: msg="Got instances {{ ami.ansible_facts.latest_ami.tags.Version }}"
+
+    - name: Get new version number
+      make:
+        chdir: ../
+        target: version
+        params:
+          CI_JOB_ID: "{{ cli_ci_job_id }}"
+          CI_COMMIT_MESSAGE: "{{ cli_ci_commit_message }}"
+          PREVIOUS: "{{ ami.ansible_facts.latest_ami.tags.Version }}"
+      register: version
+
+    # - name: Show stack outputs
+    #   debug: msg="Version {{ version }}"
+
     - name: Register AMI
       ec2_ami:
         instance_id: "{{ item.id }}"
         region: "{{ cli_ec2region }}"
         wait: yes
-        name: "{{ g_aminame }}-{{ cli_version }}"
+        name: "{{ g_aminame }}-{{ version }}"
         tags:
           Name: "{{ g_aminame }}"
           Service: Core Instance
