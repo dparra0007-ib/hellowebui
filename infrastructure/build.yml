@@ -99,6 +99,13 @@
     # - name: Show stack outputs
     #   debug: msg="Version {{ version.stdout_lines[0] }}"
 
+    - name: Copy using the 'content' for inline data
+      copy:
+        content: '{{ version.stdout_lines[0] }}'
+        dest: ./version.var
+      delegate_to: localhost
+      when: version.stdout_lines[0]
+
     - name: Register AMI
       ec2_ami:
         instance_id: "{{ item.id }}"
@@ -118,10 +125,3 @@
         instance_ids: '{{ ec2.instance_ids }}'
         region: "{{ cli_ec2region }}"
       with_items: "{{ ec2.instances }}"
-
-    - name: Copy using the 'content' for inline data
-      copy:
-        content: '{{ version.stdout_lines[0] }}'
-        dest: ./version.var
-      delegate_to: localhost
-      when: version.stdout_lines[0]
