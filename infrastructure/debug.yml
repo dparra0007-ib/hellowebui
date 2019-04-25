@@ -1,0 +1,20 @@
+---
+- name: Ensure servers are provisioned in vpc
+  hosts: localhost
+  gather_facts: false
+  tags:
+    - debug
+
+  tasks:
+  - name: Find last application images
+    ec2_ami_facts:
+      owners: self
+      region: "{{ cli_ec2region }}"
+      filters:
+        "tag:Name": "{{ g_aminame }}"
+        "tag:Build": "{{ cli_ci_pipeline_id }}"
+        "tag:OpCo": "{{ g_opco }}"
+    register: ami_find
+
+  - name: Show stack outputs
+    debug: msg="AMIs {{ ami_find }}"
