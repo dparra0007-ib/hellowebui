@@ -12,7 +12,7 @@
       region: "{{ cli_ec2region }}"
       filters:
         "tag:Name": "{{ g_aminame }}"
-        "tag:Build": "{{ cli_ci_pipeline_id }}"
+        "tag:Build": "{{ g_aminame }}-{{ cli_ci_pipeline_id }}"
         "tag:OpCo": "{{ g_opco }}"
     register: ami_find
 
