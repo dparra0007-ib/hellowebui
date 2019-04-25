@@ -99,13 +99,13 @@
     # - name: Show stack outputs
     #   debug: msg="Version {{ version.stdout_lines[0] }}"
 
-    - name: Show stack outputs
-      debug: "{{ lookup('env', 'PWD') }}"
+    # - name: Show stack outputs
+    #   debug: "{{ lookup('env', 'PWD') }}"
 
     - name: Copy using the 'content' for inline data
       copy:
         content: '{{ version.stdout_lines[0] }}'
-        dest: "{{ lookup('env', 'PWD') }}/version.var"
+        dest: "{{ lookup('env', 'PWD') }}/infrastructure/version.var"
       delegate_to: localhost
       when: version.stdout_lines[0]
 
