@@ -5,7 +5,7 @@ else
 	FILTERED := $(shell echo $(PREVIOUS))
 endif
 
-SEMVER_EXPRESSION := ./semver bump prerel ${CI_JOB_ID} ${FILTERED}
+SEMVER_EXPRESSION := ./semver bump prerel ${CI_PIPELINE_ID} ${FILTERED}
 VERSION := $(shell $(SEMVER_EXPRESSION))
 
 ifeq ($(findstring *PATCH*,$(CI_COMMIT_MESSAGE)),*PATCH*)
