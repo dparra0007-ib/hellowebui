@@ -61,11 +61,11 @@ build_application:
     - tower-cli job launch --job-template site-build --extra-vars="cli_ec2region=us-west-1 cli_aminame=hellowebui cli_ci_job_id=$CI_JOB_ID cli_ci_commit_message='$CI_COMMIT_MESSAGE'" --wait -v
 
     - pwd
-    - ls -la
-    - ls -la ./infrastructure/
+    - ls -la ${PWD}
+    - ls -la ${PWD}/infrastructure/
   artifacts:
     paths:
-      - ./infrastructure/version.var
+      - ${PWD}/infrastructure/version.var
 
 functional_test_service:
   stage: test application
