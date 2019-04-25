@@ -106,7 +106,6 @@
       copy:
         content: '{{ version.stdout_lines[0] }}'
         dest: "{{ lookup('env', 'PWD') }}/infrastructure/version.var"
-      delegate_to: localhost
       when: version.stdout_lines[0]
 
     - name: Register AMI
