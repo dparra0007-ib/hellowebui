@@ -19,7 +19,7 @@ variables:
   TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
   TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
 
-  STACKNAME_STG: $CI_PROJECT_NAME-staging
+  STACKNAME_STG: hellowebui-staging
 
 # build_code:
 #   stage: build code
