@@ -132,7 +132,7 @@ functional_regression_test_staging:
   script:
     - tower-cli job launch 
       --job-template site-prov 
-      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=HelloWebui cli_deploymentenv=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=HelloWebui cli_deploymentenv=staging cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
       --tags "provision,provision-test,setup-test" 
       --wait
 
