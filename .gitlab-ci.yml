@@ -76,14 +76,24 @@ functional_test_service:
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - tower-cli job launch --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=HelloWebuiTest cli_deploymentenv=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" --wait
+    - tower-cli job launch 
+      --job-template site-prov 
+      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=HelloWebuiTest cli_deploymentenv=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+      --tags "provision,provision-core,setup-core,provision-test,setup-test" 
+      --wait
 
     - mvn clean package -f ./hellowebui-functional-test
     - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar $SUT_IP $TESTER_IP
 
-    - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=HelloWebuiTest cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+    - tower-cli job launch 
+      --job-template site-deprov 
+      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=HelloWebuiTest cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+  only:
+    - master
+  except:
+    - triggers
 
 deploy_staging:
   stage: deploy
@@ -96,9 +106,49 @@ deploy_staging:
 
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - tower-cli job launch --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=HelloWebui cli_deploymentenv=staging cli_ci_pipeline_id='$CI_PIPELINE_ID'" --wait
+    - tower-cli job launch 
+      --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=HelloWebui cli_deploymentenv=staging cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+      --tags "provision,provision-core,setup-core" 
+      --wait
   environment:
     name: staging
+  only:
+    - master
+  except:
+    - triggers
+
+functional_regression_test_staging:
+  stage: regression test deploy
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.1
+  before_script:
+    - tower-cli config host $TOWER_CLI_HOST
+    - tower-cli config username $TOWER_CLI_USERNAME
+    - tower-cli config password $TOWER_CLI_PASSWORD
+    - tower-cli config verify_ssl false
+
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
+    - export AWS_DEFAULT_REGION="us-west-1"
+  script:
+    - tower-cli job launch 
+      --job-template site-prov 
+      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=HelloWebui cli_deploymentenv=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+      --tags "provision,provision-test,setup-test" 
+      --wait
+
+    - mvn clean package -f ./hellowebui-functional-test
+    - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebui" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+    - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebui" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+    - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar $SUT_IP $TESTER_IP
+
+    - tower-cli job launch 
+      --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=HelloWebui cli_deploymentenv=staging cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+      --tags "provision" 
+      --wait
+  only:
+    - master
+  except:
+    - triggers
 
 rollback_staging:
   stage: regression test deploy
@@ -116,3 +166,7 @@ rollback_staging:
   environment:
     name: staging
   when: manual
+  only:
+    - master
+  except:
+    - triggers
