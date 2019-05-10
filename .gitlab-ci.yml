@@ -67,7 +67,7 @@ build_application:
       - ${PWD}/infrastructure/version.var
 
 .deploy: &deploy
-  image: aghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
   script:
     - tower-cli config host $ENV_TOWER_CLI_HOST
     - tower-cli config username $ENV_TOWER_CLI_USERNAME
