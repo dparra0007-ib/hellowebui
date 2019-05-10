@@ -8,15 +8,18 @@ stages:
 # - build code
 - test code
 - build application
-# - push templates
+- review application
 - test application
 - deploy
 - regression test deploy
+- cleanup
 
 variables:
   TOWER_CLI_HOST: $TOWER_CLI_HOST
   TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
   TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
+
+  STACKNAME_STG: $CI_PROJECT_NAME-staging
 
 # build_code:
 #   stage: build code
@@ -63,6 +66,41 @@ build_application:
     paths:
       - ${PWD}/infrastructure/version.var
 
+.deploy: &deploy
+  image: aghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  script:
+    - tower-cli config host $ENV_TOWER_CLI_HOST
+    - tower-cli config username $ENV_TOWER_CLI_USERNAME
+    - tower-cli config password $ENV_TOWER_CLI_PASSWORD
+    - tower-cli config verify_ssl false
+    - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
+
+    - tower-cli job launch 
+        --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+        --tags "provision,provision-core,setup-core" 
+        --wait
+
+review:
+  <<: *deploy
+  stage: review application
+  variables:
+    ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
+    ENV_TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
+    ENV_TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
+    ENV_AWS_DEFAULT_REGION: "us-west-1"
+    STACKNAME: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
+    # STACKNAME: HelloWebui
+    ENVIRONMENT: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
+
+  environment:
+    name: $CI_BUILD_REF_NAME
+    # url: http://userapi-apigateway-$CI_PROJECT_PATH_SLUG-$CI_BUILD_REF_NAME.$OPENSHIFT_DOMAIN
+    on_stop: stop-review
+  only:
+    - branches
+  except:
+    - master
+
 functional_test_service:
   stage: test application
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.1
@@ -95,25 +133,45 @@ functional_test_service:
   except:
     - triggers
 
-deploy_staging:
-  stage: deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
-  before_script:
-    - tower-cli config host $TOWER_CLI_HOST
-    - tower-cli config username $TOWER_CLI_USERNAME
-    - tower-cli config password $TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
+# deploy_staging:
+#   stage: deploy
+#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+#   before_script:
+#     - tower-cli config host $TOWER_CLI_HOST
+#     - tower-cli config username $TOWER_CLI_USERNAME
+#     - tower-cli config password $TOWER_CLI_PASSWORD
+#     - tower-cli config verify_ssl false
 
-    - export AWS_DEFAULT_REGION="us-west-1"
-  script:
-    - tower-cli job launch 
-      --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=HelloWebui cli_deploymentenv=staging cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
-      --tags "provision,provision-core,setup-core" 
-      --wait
+#     - export AWS_DEFAULT_REGION="us-west-1"
+#   script:
+#     - tower-cli job launch 
+#       --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=HelloWebui cli_deploymentenv=$ENVIRONMENT cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+#       --tags "provision,provision-core,setup-core" 
+#       --wait
+#   environment:
+#     name: staging
+#   only:
+#     - master
+#   except:
+#     - triggers
+
+deploy_staging:
+  <<: *deploy
+  stage: review application
+  variables:
+    ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
+    ENV_TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
+    ENV_TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
+    ENV_AWS_DEFAULT_REGION: "us-west-1"
+    STACKNAME: $STACKNAME_STG
+    ENVIRONMENT: staging
+
   environment:
     name: staging
+    # url: http://userapi-apigateway-$CI_PROJECT_PATH_SLUG-$CI_BUILD_REF_NAME.$OPENSHIFT_DOMAIN
+    on_stop: stop-staging
   only:
-    - master
+      - master
   except:
     - triggers
 
@@ -132,7 +190,7 @@ functional_regression_test_staging:
   script:
     - tower-cli job launch 
       --job-template site-prov 
-      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=HelloWebui cli_deploymentenv=staging cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=$STACKNAME_STG cli_deploymentenv=staging cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
       --tags "provision,provision-test,setup-test" 
       --wait
 
@@ -150,23 +208,77 @@ functional_regression_test_staging:
   except:
     - triggers
 
-rollback_staging:
-  stage: regression test deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
-  before_script:
-    - tower-cli config host $TOWER_CLI_HOST
-    - tower-cli config username $TOWER_CLI_USERNAME
-    - tower-cli config password $TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
+# rollback_staging:
+#   stage: regression test deploy
+#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+#   before_script:
+#     - tower-cli config host $TOWER_CLI_HOST
+#     - tower-cli config username $TOWER_CLI_USERNAME
+#     - tower-cli config password $TOWER_CLI_PASSWORD
+#     - tower-cli config verify_ssl false
 
-    - export AWS_DEFAULT_REGION="us-west-1"
+#     - export AWS_DEFAULT_REGION="us-west-1"
+#   script:
+#     - cd ./infrastructure
+#     - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=HelloWebui cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+#   environment:
+#     name: staging
+#   when: manual
+#   only:
+#     - master
+#   except:
+#     - triggers
+
+stop-staging:
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  stage: cleanup
+  variables:
+    ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
+    ENV_TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
+    ENV_TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
+    ENV_AWS_DEFAULT_REGION: "us-west-1"
+    STACKNAME: $STACKNAME_STG
+  before_script:
+    - tower-cli config host $ENV_TOWER_CLI_HOST
+    - tower-cli config username $ENV_TOWER_CLI_USERNAME
+    - tower-cli config password $ENV_TOWER_CLI_PASSWORD
+    - tower-cli config verify_ssl false
+    - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
   script:
     - cd ./infrastructure
-    - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=HelloWebui cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+    - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=$STACKNAME cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+  when: manual
   environment:
     name: staging
-  when: manual
+    action: stop
   only:
-    - master
+      - master
   except:
     - triggers
+
+stop-review:
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  stage: cleanup
+  variables:
+    ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
+    ENV_TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
+    ENV_TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
+    ENV_AWS_DEFAULT_REGION: "us-west-1"
+    STACKNAME: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
+  before_script:
+    - tower-cli config host $ENV_TOWER_CLI_HOST
+    - tower-cli config username $ENV_TOWER_CLI_USERNAME
+    - tower-cli config password $ENV_TOWER_CLI_PASSWORD
+    - tower-cli config verify_ssl false
+    - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
+  script:
+    - cd ./infrastructure
+    - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=$STACKNAME cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+  when: manual
+  environment:
+    name: $CI_BUILD_REF_NAME
+    action: stop
+  only:
+    - branches
+  except:
+    - master
