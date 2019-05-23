@@ -22,7 +22,8 @@
         "tag:OpCo": "{{ g_opco }}"
     register: ami_find
 
-  - terraform:
+  - name: delete a deploy
+    terraform:
       project_path: '{{ cli_tf }}'
       state: absent
       variables:
