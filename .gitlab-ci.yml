@@ -75,6 +75,8 @@ build_application:
     - tower-cli config verify_ssl false
     - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
 
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - cd ./infrastructure
     - terraform init -backend-config="key=$STACKNAME"
 
