@@ -30,7 +30,8 @@
   #       Environment: "{{ cli_deploymentenv }}"
   #   register: stack
 
-  - terraform:
+  - name: create a terraform deploy
+    terraform:
       project_path: '{{ cli_tf }}'
       state: present
       variables:
