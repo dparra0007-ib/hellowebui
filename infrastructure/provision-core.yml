@@ -11,7 +11,7 @@
       region: "{{ cli_ec2region }}"
       filters:
         instance-state-name: running
-        "tag:aws:cloudformation:stack-name": "{{ cli_stackname }}"
+        "tag:stackname": "{{ cli_stackname }}"
         "tag:Role": "Core Instance"
     register: ec2_core_facts
 

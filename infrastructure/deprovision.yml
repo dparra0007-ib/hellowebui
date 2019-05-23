@@ -6,8 +6,27 @@
     - deprovision
 
   tasks:
-  - name: delete a stack
-    cloudformation:
-      stack_name: "{{ cli_stackname }}"
-      state: "absent"
+  # - name: delete a stack
+  #   cloudformation:
+  #     stack_name: "{{ cli_stackname }}"
+  #     state: "absent"
+  #     region: "{{ cli_ec2region }}"
+
+  - name: Find last application images
+    ec2_ami_facts:
+      owners: self
       region: "{{ cli_ec2region }}"
+      filters:
+        "tag:Name": "{{ g_aminame }}"
+        "tag:Build": "{{ g_aminame }}-{{ cli_ci_pipeline_id }}"
+        "tag:OpCo": "{{ g_opco }}"
+    register: ami_find
+
+  - terraform:
+      project_path: '{{ cli_tf }}'
+      state: absent
+      variables:
+        AMI: "{{ ami_find.images[0].image_id }}"
+        stackname: "{{ cli_stackname }}"
+        environment: "{{ cli_deploymentenv }}"
+    register: stack

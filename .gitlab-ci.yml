@@ -52,7 +52,7 @@ static_test_service:
 
 build_application:
   stage: build application
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
   before_script:
     - tower-cli config host $TOWER_CLI_HOST
     - tower-cli config username $TOWER_CLI_USERNAME
@@ -67,13 +67,15 @@ build_application:
       - ${PWD}/infrastructure/version.var
 
 .deploy: &deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
   script:
     - tower-cli config host $ENV_TOWER_CLI_HOST
     - tower-cli config username $ENV_TOWER_CLI_USERNAME
     - tower-cli config password $ENV_TOWER_CLI_PASSWORD
     - tower-cli config verify_ssl false
     - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
+
+    - terraform init -backend-config="key=$STACKNAME"
 
     - tower-cli job launch 
         --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
@@ -103,7 +105,7 @@ review:
 
 functional_test_service:
   stage: test application
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.1
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:4.0.0
   before_script:
     - tower-cli config host $TOWER_CLI_HOST
     - tower-cli config username $TOWER_CLI_USERNAME
@@ -135,7 +137,7 @@ functional_test_service:
 
 # deploy_staging:
 #   stage: deploy
-#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
 #   before_script:
 #     - tower-cli config host $TOWER_CLI_HOST
 #     - tower-cli config username $TOWER_CLI_USERNAME
@@ -177,7 +179,7 @@ deploy_staging:
 
 functional_regression_test_staging:
   stage: regression test deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.1
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:4.0.0
   before_script:
     - tower-cli config host $TOWER_CLI_HOST
     - tower-cli config username $TOWER_CLI_USERNAME
@@ -210,7 +212,7 @@ functional_regression_test_staging:
 
 # rollback_staging:
 #   stage: regression test deploy
-#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
 #   before_script:
 #     - tower-cli config host $TOWER_CLI_HOST
 #     - tower-cli config username $TOWER_CLI_USERNAME
@@ -230,7 +232,7 @@ functional_regression_test_staging:
 #     - triggers
 
 stop-staging:
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
   stage: cleanup
   variables:
     ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
@@ -257,7 +259,7 @@ stop-staging:
     - triggers
 
 stop-review:
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
   stage: cleanup
   variables:
     ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST

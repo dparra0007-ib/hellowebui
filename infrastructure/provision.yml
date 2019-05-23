@@ -16,18 +16,27 @@
         "tag:OpCo": "{{ g_opco }}"
     register: ami_find
 
-  - name: create a cloudformation stack
-    cloudformation:
-      stack_name: "{{ cli_stackname }}"
-      state: "present"
-      region: "{{ cli_ec2region }}"
-      disable_rollback: true
-      template: "{{ cli_awstemplate }}"
-      template_parameters:
-        KeyName: "{{ g_keyname }}"
+  # - name: create a cloudformation stack
+  #   cloudformation:
+  #     stack_name: "{{ cli_stackname }}"
+  #     state: "present"
+  #     region: "{{ cli_ec2region }}"
+  #     disable_rollback: true
+  #     template: "{{ cli_awstemplate }}"
+  #     template_parameters:
+  #       KeyName: "{{ g_keyname }}"
+  #       AMI: "{{ ami_find.images[0].image_id }}"
+  #       AWSRegion: "{{ cli_ec2region }}"
+  #       Environment: "{{ cli_deploymentenv }}"
+  #   register: stack
+
+  - terraform:
+      project_path: '{{ cli_tf }}'
+      state: present
+      variables:
         AMI: "{{ ami_find.images[0].image_id }}"
-        AWSRegion: "{{ cli_ec2region }}"
-        Environment: "{{ cli_deploymentenv }}"
+        stackname: "{{ cli_stackname }}"
+        environment: "{{ cli_deploymentenv }}"
     register: stack
 
   - name: Get facts about all the newly created instances
@@ -35,8 +44,16 @@
       region: "{{ cli_ec2region }}"
       filters:
         instance-state-name: running
-        "tag:aws:cloudformation:stack-name": "{{ cli_stackname }}"
+        "tag:stackname": "{{ cli_stackname }}"
     register: ec2_facts
+
+  # - name: Get facts about all the newly created instances
+  #   ec2_instance_facts:
+  #     region: "{{ cli_ec2region }}"
+  #     filters:
+  #       instance-state-name: running
+  #       "tag:aws:cloudformation:stack-name": "{{ cli_stackname }}"
+  #   register: ec2_facts
 
   # - name: Show stack outputs
   #   debug: msg="Got instances {{ec2_facts}}"
