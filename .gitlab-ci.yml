@@ -81,7 +81,7 @@ build_application:
     - terraform init -backend-config="key=$STACKNAME"
 
     - tower-cli job launch 
-        --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+        --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_tf=./ cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
         --tags "provision,provision-core,setup-core" 
         --wait
 
