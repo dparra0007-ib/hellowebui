@@ -75,6 +75,7 @@ build_application:
     - tower-cli config verify_ssl false
     - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
 
+    - cd ./infrastructure
     - terraform init -backend-config="key=$STACKNAME"
 
     - tower-cli job launch 
