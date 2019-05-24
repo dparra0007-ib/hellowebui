@@ -34,18 +34,10 @@
     terraform:
       project_path: '{{ cli_tf }}'
       state: present
-      force_init: yes
       variables:
         AMI: "{{ ami_find.images[0].image_id }}"
         stackname: "{{ cli_stackname }}"
         environment: "{{ cli_deploymentenv }}"
-      backend_config:
-        path: "/home/centos/terraform_workspaces"
-      #   region: "us-west-1"
-      #   bucket: "iaggbs-terraform-backend"
-      #   key: "terraform.tfstate"
-      #   access_key: AKIAIX3DNBYFKAC3H4QA
-      #   secret_key: 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
     register: stack
 
   - name: Get facts about all the newly created instances
