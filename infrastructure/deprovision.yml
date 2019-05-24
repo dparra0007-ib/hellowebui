@@ -26,7 +26,8 @@
     terraform:
       project_path: '{{ cli_tf }}'
       state: absent
-      force_init: true
+      backend_config:
+        key: "hellowebui-staging"
       variables:
         AMI: "{{ ami_find.images[0].image_id }}"
         stackname: "{{ cli_stackname }}"
