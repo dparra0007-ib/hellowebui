@@ -6,12 +6,6 @@
     - deprovision
 
   tasks:
-  # - name: delete a stack
-  #   cloudformation:
-  #     stack_name: "{{ cli_stackname }}"
-  #     state: "absent"
-  #     region: "{{ cli_ec2region }}"
-
   - name: Find last application images
     ec2_ami_facts:
       owners: self

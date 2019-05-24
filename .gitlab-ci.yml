@@ -97,7 +97,6 @@ review:
     ENV_TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
     ENV_AWS_DEFAULT_REGION: "us-west-1"
     STACKNAME: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
-    # STACKNAME: HelloWebui
     ENVIRONMENT: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
 
   environment:
@@ -140,28 +139,6 @@ functional_test_service:
     - master
   except:
     - triggers
-
-# deploy_staging:
-#   stage: deploy
-#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
-#   before_script:
-#     - tower-cli config host $TOWER_CLI_HOST
-#     - tower-cli config username $TOWER_CLI_USERNAME
-#     - tower-cli config password $TOWER_CLI_PASSWORD
-#     - tower-cli config verify_ssl false
-
-#     - export AWS_DEFAULT_REGION="us-west-1"
-#   script:
-#     - tower-cli job launch 
-#       --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=HelloWebui cli_deploymentenv=$ENVIRONMENT cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
-#       --tags "provision,provision-core,setup-core" 
-#       --wait
-#   environment:
-#     name: staging
-#   only:
-#     - master
-#   except:
-#     - triggers
 
 deploy_staging:
   <<: *deploy
@@ -216,27 +193,6 @@ functional_regression_test_staging:
   except:
     - triggers
 
-# rollback_staging:
-#   stage: regression test deploy
-#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
-#   before_script:
-#     - tower-cli config host $TOWER_CLI_HOST
-#     - tower-cli config username $TOWER_CLI_USERNAME
-#     - tower-cli config password $TOWER_CLI_PASSWORD
-#     - tower-cli config verify_ssl false
-
-#     - export AWS_DEFAULT_REGION="us-west-1"
-#   script:
-#     - cd ./infrastructure
-#     - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=HelloWebui cli_ci_pipeline_id='$CI_PIPELINE_ID'"
-#   environment:
-#     name: staging
-#   when: manual
-#   only:
-#     - master
-#   except:
-#     - triggers
-
 stop-staging:
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
   stage: cleanup
@@ -255,6 +211,7 @@ stop-staging:
   script:
     - cd ./infrastructure
     - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=$STACKNAME cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+    # - ansible-playbook site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=$STACKNAME cli_ci_pipeline_id='$CI_PIPELINE_ID'"
   when: manual
   environment:
     name: staging
