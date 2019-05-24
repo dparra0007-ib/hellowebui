@@ -39,8 +39,8 @@
         AMI: "{{ ami_find.images[0].image_id }}"
         stackname: "{{ cli_stackname }}"
         environment: "{{ cli_deploymentenv }}"
-      workspace: "hellowebui"
-      # backend_config:
+      backend_config:
+        path: "/home/centos/terraform_workspaces"
       #   region: "us-west-1"
       #   bucket: "iaggbs-terraform-backend"
       #   key: "terraform.tfstate"
