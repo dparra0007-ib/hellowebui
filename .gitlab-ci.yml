@@ -124,7 +124,7 @@ functional_test_service:
   script:
     - tower-cli job launch 
       --job-template site-prov 
-      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=HelloWebuiTest cli_deploymentenv=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_tf=./ cli_stackname=HelloWebuiTest cli_deploymentenv=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
       --tags "provision,provision-core,setup-core,provision-test,setup-test" 
       --wait
 
