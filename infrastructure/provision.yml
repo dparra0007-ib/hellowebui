@@ -34,7 +34,7 @@
     terraform:
       project_path: '{{ cli_tf }}'
       state: present
-      # force_init: yes
+      force_init: yes
       variables:
         AMI: "{{ ami_find.images[0].image_id }}"
         stackname: "{{ cli_stackname }}"
@@ -42,7 +42,6 @@
       backend_config:
         region: "us-west-1"
         bucket: "iaggbs-terraform-backend"
-        key: "random.tfstate"
     register: stack
 
   - name: Get facts about all the newly created instances
