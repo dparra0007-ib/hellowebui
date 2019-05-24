@@ -34,6 +34,7 @@
     terraform:
       project_path: '{{ cli_tf }}'
       state: present
+      force_init: true
       variables:
         AMI: "{{ ami_find.images[0].image_id }}"
         stackname: "{{ cli_stackname }}"
