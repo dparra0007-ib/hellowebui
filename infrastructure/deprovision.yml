@@ -26,6 +26,7 @@
     terraform:
       project_path: '{{ cli_tf }}'
       state: absent
+      force_init: true
       backend_config:
         key: "hellowebui-staging"
       variables:
