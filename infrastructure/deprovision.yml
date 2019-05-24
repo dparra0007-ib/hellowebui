@@ -26,13 +26,13 @@
     terraform:
       project_path: '{{ cli_tf }}'
       state: absent
-      force_init: yes
       variables:
         AMI: "{{ ami_find.images[0].image_id }}"
         stackname: "{{ cli_stackname }}"
         environment: "{{ cli_deploymentenv }}"
-      backend_config:
-        region: "us-west-1"
-        bucket: "iaggbs-terraform-backend"
-        key: "random.tfstate"
+      workspace: "hellowebui"
+      # backend_config:
+      #   region: "us-west-1"
+      #   bucket: "iaggbs-terraform-backend"
+      #   key: "random.tfstate"
     register: stack
