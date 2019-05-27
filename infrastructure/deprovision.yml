@@ -29,4 +29,6 @@
         environment: "{{ cli_deploymentenv }}"
         aws_access_key: "{{ cli_aws_access_key }}"
         aws_secret_key: "{{ cli_aws_secret_key }}"
+        action: "{{ cli_action }}"
+      workspace: "{{ cli_deploymentenv }}"
     register: stack

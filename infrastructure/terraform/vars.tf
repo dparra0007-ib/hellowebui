@@ -1,10 +1,18 @@
-variable "aws_access_key" {
-  # default = "AKIAIX3DNBYFKAC3H4QA"
+variable "action_on_environment" {
+  type = "map"
+  default = {
+    deployment = "deployment"
+    functional_test = "functional_test"
+    performance_test = "performance_test"
+    regresstion_test = "regresstion_test"
+  }
 }
 
-variable "aws_secret_key" {
-  # default = "Z35CuPGjgASafrbmUl25OOnF9r6iPQbnxRYMUlJw"
-}
+variable "action" {}
+
+variable "aws_access_key" {}
+
+variable "aws_secret_key" {}
 
 variable "private_key_path" {
   default = "hellowebui_key.pem"

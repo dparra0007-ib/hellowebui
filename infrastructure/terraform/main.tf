@@ -9,6 +9,18 @@ provider "aws" {
 }
 
 ##################################################################################
+# LOCALS
+##################################################################################
+
+locals {
+  #action = "${lookup(var.action_on_environment, terraform.workspace, "deployment")}"
+  #action = "${lookup(var.action_on_environment, var.action, "deployment")}"
+  test_size = "${var.action == "test" ? 1 : 0}"
+  #test_size = "${local.functional_test == "test" ? 1 : 0}"
+  # size = "${local.environment == "dev" ? lookup(var.workspace_to_size_map, terraform.workspace, "small") : var.environment_to_size_map[local.environment]}"
+}
+
+##################################################################################
 # DATA
 ##################################################################################
 
@@ -106,7 +118,7 @@ resource "aws_security_group" "nginx-sg" {
 }
 
 # INSTANCES #
-resource "aws_instance" "nginx1" {
+resource "aws_instance" "coreinstance" {
   ami           = "${var.AMI}"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet1.id}"
@@ -126,18 +138,39 @@ resource "aws_instance" "nginx1" {
   }
 }
 
+resource "aws_instance" "testinstance" {
+  count = "${local.test_size}"
+  ami           = "ami-074e2d6769f445be5"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.subnet1.id}"
+  vpc_security_group_ids = ["${aws_security_group.nginx-sg.id}"]
+  key_name        = "${var.key_name}"
+
+  connection {
+    user        = "ec2-user"
+    private_key = "${file(var.private_key_path)}"
+  }
+
+  tags = {
+    Role = "Test Instance"
+    environment = "${var.environment}"
+    stackname = "${var.stackname}"
+    logicalid = "EC2Instance"
+  }
+}
+
 ##################################################################################
 # OUTPUT
 ##################################################################################
 
 output "InstanceId" {
-    value = "${aws_instance.nginx1.id}"
+    value = "${aws_instance.coreinstance.id}"
 }
 
 output "PublicDNS" {
-    value = "${aws_instance.nginx1.public_dns}"
+    value = "${aws_instance.coreinstance.public_dns}"
 }
 
 output "PublicIP" {
-    value = "${aws_instance.nginx1.public_ip}"
+    value = "${aws_instance.coreinstance.public_ip}"
 }
