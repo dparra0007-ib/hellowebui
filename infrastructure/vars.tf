@@ -1,13 +1,9 @@
-# aws_access_key = "AKIAIX3DNBYFKAC3H4QA"
-# aws_secret_key = "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"
-# private_key_path = "hellowebui_key.pem"
-
 variable "aws_access_key" {
-  default = "AKIAIX3DNBYFKAC3H4QA"
+  # default = "AKIAIX3DNBYFKAC3H4QA"
 }
 
 variable "aws_secret_key" {
-  default = "Z35CuPGjgASafrbmUl25OOnF9r6iPQbnxRYMUlJw"
+  # default = "Z35CuPGjgASafrbmUl25OOnF9r6iPQbnxRYMUlJw"
 }
 
 variable "private_key_path" {
