@@ -27,6 +27,8 @@
         AMI: "{{ ami_find.images[0].image_id }}"
         stackname: "{{ cli_stackname }}"
         environment: "{{ cli_deploymentenv }}"
+        aws_access_key: "{{ cli_aws_access_key }}"
+        aws_secret_key: "{{ cli_aws_secret_key }}"
     register: stack
 
   - name: Get facts about all the newly created instances
