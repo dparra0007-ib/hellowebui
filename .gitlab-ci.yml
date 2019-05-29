@@ -52,7 +52,7 @@ static_test_service:
 
 static_test_provision:
   stage: test code
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.0
   before_script:
     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
@@ -66,7 +66,7 @@ static_test_provision:
 
 build_application:
   stage: build application
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.0
   before_script:
     - tower-cli config host $TOWER_CLI_HOST
     - tower-cli config username $TOWER_CLI_USERNAME
@@ -81,7 +81,7 @@ build_application:
       - ${PWD}/infrastructure/version.var
 
 .deploy: &deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.0
   script:
     - tower-cli config host $ENV_TOWER_CLI_HOST
     - tower-cli config username $ENV_TOWER_CLI_USERNAME
@@ -120,7 +120,7 @@ review:
 
 plan:
   stage: review application
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.0
   before_script:
     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
@@ -226,7 +226,7 @@ functional_regression_test_staging:
     - triggers
 
 stop-staging:
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.0
   stage: cleanup
   variables:
     ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
@@ -255,7 +255,7 @@ stop-staging:
     - triggers
 
 stop-review:
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.0
   stage: cleanup
   variables:
     ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
