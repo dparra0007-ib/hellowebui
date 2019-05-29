@@ -60,7 +60,7 @@ static_test_provision:
   script:
     - cd ./infrastructure/terraform
     - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
-    - terraform validate -check-variables=true
+    - terraform validate -check-variables=false
   except:
     - triggers
 
