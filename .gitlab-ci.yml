@@ -59,7 +59,7 @@ static_test_provision:
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
     - cd ./infrastructure/terraform
-    - terraform init
+    - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
     - terraform validate -check-variables=true
   except:
     - triggers
@@ -127,7 +127,7 @@ plan:
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
     - cd ./infrastructure/terraform
-    - terraform init
+    - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
     - terraform workspace select staging
     - terraform plan -out ./tfplan.txt
   only:
