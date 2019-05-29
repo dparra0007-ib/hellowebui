@@ -50,6 +50,15 @@ static_test_service:
   except:
     - triggers
 
+static_test_provision:
+  stage: test code
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
+  script:
+    - cd ./infrastructure
+    - terraform validate -check-variables=true
+  except:
+    - triggers
+
 build_application:
   stage: build application
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
@@ -103,6 +112,21 @@ review:
     - branches
   except:
     - master
+
+plan:
+  stage: review application
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
+  script:
+    - cd ./infrastructure
+    - terraform workspace select staging
+    - terraform plan -out ./tfplan.txt
+  only:
+    - branches
+  except:
+    - master
+  artifacts:
+    paths:
+      - ${PWD}/infrastructure/terraform/tfplan.txt
 
 functional_test_service:
   stage: test application
