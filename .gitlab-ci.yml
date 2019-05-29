@@ -127,8 +127,7 @@ plan:
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
     - cd ./infrastructure/terraform
-    - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
-    - terraform workspace select staging
+    - terraform init -backend-config="key=staging"
     - terraform plan -out ./tfplan.txt
   only:
     - branches
