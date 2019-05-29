@@ -17,15 +17,24 @@
     register: ami_find
 
   - name: Terraform init
-    shell: terraform init -backend-config="key=staging"
+    command: terraform init -backend-config="key=staging"
     args:
       chdir: $PWD/terraform
+    when: "ami_find"
 
   - name: Terraform plan
-    command: terraform plan -var 'AMI={{ ami_find.images[0].image_id }}' -var 'stackname={{ cli_stackname }}' -var 'environment={{ cli_deploymentenv }}' -var 'aws_access_key={{ cli_aws_access_key }}' -var 'aws_secret_key={{ cli_aws_secret_key }}' -out ./plan.tfstate
+    command: >-
+      terraform plan
+      -var 'AMI={{ ami_find.images[0].image_id }}'
+      -var 'stackname={{ cli_stackname }}'
+      -var 'environment={{ cli_deploymentenv }}'
+      -var 'aws_access_key={{ cli_aws_access_key }}'
+      -var 'aws_secret_key={{ cli_aws_secret_key }}'
+      -out ./plan.tfstate
     args:
       chdir: $PWD/terraform
-    register: result
+    when: "ami_find"
+    # register: result
 
   # - name: Show terraform stdout
   #   debug: msg="{{ result.stdout_lines }}"
