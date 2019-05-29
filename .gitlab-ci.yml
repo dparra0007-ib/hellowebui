@@ -55,6 +55,7 @@ static_test_provision:
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
   script:
     - cd ./infrastructure/terraform
+    - terraform init
     - terraform validate -check-variables=true
   except:
     - triggers
@@ -118,6 +119,7 @@ plan:
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:3.0.0
   script:
     - cd ./infrastructure/terraform
+    - terraform init
     - terraform workspace select staging
     - terraform plan -out ./tfplan.txt
   only:
