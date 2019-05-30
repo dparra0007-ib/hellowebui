@@ -13,8 +13,8 @@ provider "aws" {
 ##################################################################################
 
 locals {
-  #action = "${lookup(var.action_on_environment, terraform.workspace, "deployment")}"
-  #action = "${lookup(var.action_on_environment, var.action, "deployment")}"
+  #action = "${lookup(var.action_on_environments, terraform.workspace, "deployment")}"
+  #action = "${lookup(var.action_on_environments, var.action, "deployment")}"
   test_size = "${var.action == "test" ? 1 : 0}"
   #test_size = "${local.functional_test == "test" ? 1 : 0}"
   # size = "${local.environment == "dev" ? lookup(var.workspace_to_size_map, terraform.workspace, "small") : var.environment_to_size_map[local.environment]}"
@@ -175,18 +175,18 @@ resource "aws_instance" "testinstance" {
   }
 }
 
-##################################################################################
-# OUTPUT
-##################################################################################
+# ##################################################################################
+# # OUTPUT
+# ##################################################################################
 
-output "InstanceId" {
-    value = "${aws_instance.coreinstance.id}"
-}
+# output "InstanceId" {
+#     value = "${aws_instance.coreinstance.id}"
+# }
 
-output "PublicDNS" {
-    value = "${aws_instance.coreinstance.public_dns}"
-}
+# output "PublicDNS" {
+#     value = "${aws_instance.coreinstance.public_dns}"
+# }
 
-output "PublicIP" {
-    value = "${aws_instance.coreinstance.public_ip}"
-}
+# output "PublicIP" {
+#     value = "${aws_instance.coreinstance.public_ip}"
+# }
