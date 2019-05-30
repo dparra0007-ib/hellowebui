@@ -41,28 +41,28 @@ variables:
 #   tags:
 #     - iaas
 
-static_test_service:
-  stage: test code
-  image: iaghcp-docker-technical-architecture.jfrog.io/sonar-scanner/ansible:1.0.0
-  script:
-    - ansible-lint ./infrastructure/site.yml
-    - ansible-lint ./infrastructure/build.yml
-  except:
-    - triggers
+# static_test_service:
+#   stage: test code
+#   image: iaghcp-docker-technical-architecture.jfrog.io/sonar-scanner/ansible:1.0.0
+#   script:
+#     - ansible-lint ./infrastructure/site.yml
+#     - ansible-lint ./infrastructure/build.yml
+#   except:
+#     - triggers
 
-static_test_provision:
-  stage: test code
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.1
-  before_script:
-    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
-    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
-    - export AWS_DEFAULT_REGION="us-west-1"
-  script:
-    - cd ./infrastructure/terraform
-    - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
-    - terraform validate -check-variables=false
-  except:
-    - triggers
+# static_test_provision:
+#   stage: test code
+#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.1
+#   before_script:
+#     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+#     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
+#     - export AWS_DEFAULT_REGION="us-west-1"
+#   script:
+#     - cd ./infrastructure/terraform
+#     - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
+#     - terraform validate -check-variables=false
+#   except:
+#     - triggers
 
 build_application:
   stage: build application
@@ -119,16 +119,18 @@ review:
     - master
 
 plan:
-  stage: review application
+  stage: test code
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.1
   before_script:
+    - ansible --version
+
     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
     - cd ./infrastructure
     - ansible-playbook site.yml 
-      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID' 'ansible_python_interpreter=/usr/local/bin/python'" 
+      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
       --tags "provision-conformity"
     - terraform show ./terraform/plan.tfstate
 
