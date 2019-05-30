@@ -33,6 +33,7 @@
       -out ./plan.tfstate
     args:
       chdir: $PWD/terraform
+    when: "ami_find"
     # register: result
 
   # - name: Show terraform stdout
