@@ -31,7 +31,10 @@
         aws_secret_key: "{{ cli_aws_secret_key }}"
         action: "{{ cli_action }}"
       workspace: "{{ cli_deploymentenv }}"
-    register: stack
+    register: stdout
+
+  - name: Show terraform stdout
+    debug: msg="{{ stdout }}"
 
   - name: Get facts about all the newly created instances
     ec2_instance_facts:
