@@ -41,28 +41,28 @@ variables:
 #   tags:
 #     - iaas
 
-# static_test_service:
-#   stage: test code
-#   image: iaghcp-docker-technical-architecture.jfrog.io/sonar-scanner/ansible:1.0.0
-#   script:
-#     - ansible-lint ./infrastructure/site.yml
-#     - ansible-lint ./infrastructure/build.yml
-#   except:
-#     - triggers
+static_test_service:
+  stage: test code
+  image: iaghcp-docker-technical-architecture.jfrog.io/sonar-scanner/ansible:1.0.0
+  script:
+    - ansible-lint ./infrastructure/site.yml
+    - ansible-lint ./infrastructure/build.yml
+  except:
+    - triggers
 
-# static_test_provision:
-#   stage: test code
-#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.1
-#   before_script:
-#     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
-#     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
-#     - export AWS_DEFAULT_REGION="us-west-1"
-#   script:
-#     - cd ./infrastructure/terraform
-#     - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
-#     - terraform validate -check-variables=false
-#   except:
-#     - triggers
+static_test_provision:
+  stage: test code
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.1
+  before_script:
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
+    - export AWS_DEFAULT_REGION="us-west-1"
+  script:
+    - cd ./infrastructure/terraform
+    - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
+    - terraform validate -check-variables=false
+  except:
+    - triggers
 
 build_application:
   stage: build application
@@ -119,7 +119,7 @@ review:
     - master
 
 plan:
-  stage: test code
+  stage: review application
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.0.1
   before_script:
     - pip3 install boto boto3
