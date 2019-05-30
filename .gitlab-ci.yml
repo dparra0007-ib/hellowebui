@@ -140,7 +140,7 @@ plan:
     - master
   artifacts:
     paths:
-      - ${PWD}/infrastructure/terraform/tfplan.txt
+      - ${PWD}/infrastructure/terraform/plan.tfstate
 
 functional_test_service:
   stage: test application
