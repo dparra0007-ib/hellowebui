@@ -10,24 +10,19 @@ provider "aws" {
 # LOCALS
 ##################################################################################
 
-locals {
-  test_size = "${var.action == "test" ? 1 : 0}"
-}
 
 ##################################################################################
 # MODULES
 ##################################################################################
 
 module "vpc" {
-  #source = "github.com/terraform-community-modules/tf_aws_vpc?ref=v1.0.0"
-  source = "./modules/vpc"
+  source = "git::https://gitlab.com/IAG-DEV/terraform-modules/vpc.git"
 
   aws_access_key  = "${var.aws_access_key}"
   aws_secret_key  = "${var.aws_secret_key}"
 }
 
 module "ec2" {
-  #source = "github.com/terraform-community-modules/tf_aws_vpc?ref=v1.0.0"
   source = "./modules/ec2"
 
   aws_access_key    = "${var.aws_access_key}"
