@@ -37,3 +37,15 @@ variable "environment" {
   description = "Environment name to be deployed."
   # default = "hellowebui-modules"
 }
+
+variable "subnet1_id" {
+  description = "First Subnet to be connected the EC2 instance."
+}
+
+variable "subnet2_id" {
+  description = "Second Subnet to be connected the EC2 instance."
+}
+
+variable "nginx-sg_id" {
+  description = "Security Group to be connected the EC2 instance."
+}

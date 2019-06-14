@@ -3,13 +3,13 @@
 ##################################################################################
 
 output "InstanceId" {
-    value = "${module.ec2.InstanceId}"
+    value = "${aws_instance.coreinstance.id}"
 }
 
 output "PublicDNS" {
-    value = "${module.ec2.PublicDNS}"
+    value = "${aws_instance.coreinstance.public_dns}"
 }
 
 output "PublicIP" {
-    value = "${module.ec2.PublicIP}"
+    value = "${aws_instance.coreinstance.public_ip}"
 }
