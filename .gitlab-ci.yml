@@ -9,10 +9,10 @@ stages:
 - test code
 - build application
 - review application
-- test application
+# - test application
 - deploy
 - regression test deploy
-- cleanup
+# - cleanup
 
 variables:
   TOWER_CLI_HOST: $TOWER_CLI_HOST
@@ -142,38 +142,6 @@ plan:
     paths:
       - ${PWD}/infrastructure/terraform/plan.tfstate
 
-functional_test_service:
-  stage: test application
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:4.0.0
-  before_script:
-    - tower-cli config host $TOWER_CLI_HOST
-    - tower-cli config username $TOWER_CLI_USERNAME
-    - tower-cli config password $TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
-
-    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
-    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
-    - export AWS_DEFAULT_REGION="us-west-1"
-  script:
-    - tower-cli job launch 
-      --job-template site-prov 
-      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=HelloWebuiTest cli_deploymentenv=test cli_action=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
-      --tags "provision,provision-core,setup-core,provision-test,setup-test" 
-      --wait
-
-    - mvn clean package -f ./hellowebui-functional-test
-    - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:stackname,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
-    - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:stackname,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
-    - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar $SUT_IP $TESTER_IP
-
-    - tower-cli job launch 
-      --job-template site-deprov 
-      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=HelloWebuiTest cli_deploymentenv=test cli_action=test cli_ci_pipeline_id='$CI_PIPELINE_ID'"
-  only:
-    - master
-  except:
-    - triggers
-
 deploy_staging:
   <<: *deploy
   stage: review application
@@ -229,7 +197,7 @@ functional_regression_test_staging:
 
 stop-staging:
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.1.0
-  stage: cleanup
+  stage: review application
   variables:
     ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
     ENV_TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
@@ -246,7 +214,7 @@ stop-staging:
   script:
     - cd ./infrastructure
     - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'"
-    # - ansible-playbook site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+    # - ansible-playbook site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_action=deployment cli_stackname=$STACKNAME cli_ci_pipeline_id='$CI_PIPELINE_ID'"
   when: manual
   environment:
     name: staging
@@ -258,7 +226,7 @@ stop-staging:
 
 stop-review:
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.1.0
-  stage: cleanup
+  stage: review application
   variables:
     ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
     ENV_TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
