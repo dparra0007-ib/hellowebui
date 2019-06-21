@@ -32,6 +32,7 @@ module "ec2" {
   private_key_path  = "${var.private_key_path}"
   environment       = "${var.environment}"
   stackname         = "${var.stackname}"
+  action            = "${var.action}"
   subnet1_id        = "${module.vpc.subnet1_id}"
   subnet2_id        = "${module.vpc.subnet2_id}"
   nginx-sg_id       = "${module.vpc.nginx-sg_id}"
