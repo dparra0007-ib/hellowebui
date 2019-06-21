@@ -1,0 +1,9 @@
+- name: apache-simple
+  src: git+https://gitlab.com/IAG-DEV/ansible-roles/apache-simple.git
+  version: origin/master
+- name: geerlingguy.java
+  src: git+https://gitlab.com/IAG-DEV/ansible-roles/geerlingguy.java.git
+  version: origin/master
+- name: selenium
+  src: git+https://gitlab.com/IAG-DEV/ansible-roles/selenium.git
+  version: origin/master
