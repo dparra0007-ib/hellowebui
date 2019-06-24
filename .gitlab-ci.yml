@@ -75,6 +75,7 @@ build_application:
     # - tower-cli config verify_ssl false
 
     - export ANSIBLE_HOST_KEY_CHECKING=False
+    - chmod 400 ./infrastructure/hellowebui_key.pem
     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
