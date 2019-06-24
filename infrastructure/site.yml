@@ -1,5 +1,4 @@
 ---
-- import_playbook: ./galaxy.yml
 - import_playbook: ./build.yml
 - import_playbook: ./provision.yml
 - import_playbook: ./provision-core.yml
