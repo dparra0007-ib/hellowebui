@@ -66,7 +66,7 @@ static_test_provision:
 
 build_application:
   stage: build application
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:5.1.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:5.0.0
   before_script:
     - pip3 install boto boto3
 
