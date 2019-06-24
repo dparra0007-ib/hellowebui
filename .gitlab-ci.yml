@@ -169,7 +169,7 @@ functional_regression_test_staging:
   stage: regression test deploy
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:4.0.0
   before_script:
-    - pip3 install boto boto3
+    # - pip3 install boto boto3
 
     - export ANSIBLE_HOST_KEY_CHECKING=False
     - chmod 400 ./infrastructure/hellowebui_key.pem
