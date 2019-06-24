@@ -75,6 +75,7 @@ build_application:
 
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
+    - cd ./infrastructure
     - ansible-playbook site.yml 
         --extra-vars="cli_ec2region=us-west-1 cli_aminame=hellowebui cli_ci_pipeline_id='$CI_PIPELINE_ID' cli_ci_commit_message='$CI_COMMIT_MESSAGE'" 
         --tags "build" 
@@ -99,6 +100,7 @@ build_application:
     #     --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'"
     #     --tags "provision,provision-core,setup-core" 
     #     --wait
+    - cd ./infrastructure
     - ansible-playbook site.yml 
         --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'"
         --tags "provision,provision-core,setup-core" 
@@ -185,15 +187,18 @@ functional_regression_test_staging:
     #   --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME_STG cli_deploymentenv=staging cli_action=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
     #   --tags "provision,provision-test,setup-test" 
     #   --wait
+    - cd ./infrastructure
     - ansible-playbook site.yml 
       --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME_STG cli_deploymentenv=staging cli_action=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
       --tags "provision,provision-test,setup-test" 
+    - cd ../
 
     - mvn clean package -f ./hellowebui-functional-test
     - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:stackname,Values=$STACKNAME_STG" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:stackname,Values=$STACKNAME_STG" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar $SUT_IP $TESTER_IP
 
+    - cd ./infrastructure
     - ansible-playbook site.yml 
       --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME_STG cli_deploymentenv=staging cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
       --tags "provision" 
