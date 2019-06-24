@@ -1,17 +1,10 @@
 ---
 - name: Build web application hosted in apache server
   hosts: localhost
+  tags:
+    - build
 
   tasks:
-    - name: Set roles path
-      stat: path=./roles/requirements.yml
-      register: requirements
-
-    - name: Run ansible-galaxy
-      command: ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
-      delegate_to: localhost
-      when: requirements.stat.exists
-
     - name: Create temporary EC2 instance
       ec2:
         key_name: "{{ g_keyname }}"

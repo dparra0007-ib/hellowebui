@@ -75,7 +75,11 @@ build_application:
 
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - tower-cli job launch --job-template site-build --extra-vars="cli_ec2region=us-west-1 cli_aminame=hellowebui cli_ci_pipeline_id='$CI_PIPELINE_ID' cli_ci_commit_message='$CI_COMMIT_MESSAGE'" --wait -v
+    - tower-cli job launch 
+        --job-template hellowebui-site-build 
+        --extra-vars="cli_ec2region=us-west-1 cli_aminame=hellowebui cli_ci_pipeline_id='$CI_PIPELINE_ID' cli_ci_commit_message='$CI_COMMIT_MESSAGE'" 
+        --tags "build" 
+        --wait -v
   artifacts:
     paths:
       - ${PWD}/infrastructure/version.var
