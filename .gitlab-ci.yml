@@ -74,7 +74,9 @@ build_application:
     # - tower-cli config password $TOWER_CLI_PASSWORD
     # - tower-cli config verify_ssl false
 
-    - export AWS_DEFAULT_REGION="us-west-1"
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
+    - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
   script:
     - cd ./infrastructure
     - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
