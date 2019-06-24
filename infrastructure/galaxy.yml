@@ -1,0 +1,13 @@
+---
+- name: Set up localhost for manage roles with ansible-galaxy
+  hosts: localhost
+
+  tasks:
+    - name: Set roles path
+      stat: path=./roles/requirements.yml
+      register: requirements
+
+    - name: Run ansible-galaxy
+      command: ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
+      delegate_to: localhost
+      when: requirements.stat.exists
