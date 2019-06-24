@@ -9,10 +9,8 @@ stages:
 - test code
 - build application
 - review application
-# - test application
 - deploy
 - regression test deploy
-# - cleanup
 
 variables:
   TOWER_CLI_HOST: $TOWER_CLI_HOST
@@ -52,7 +50,6 @@ static_test_service:
 
 static_test_provision:
   stage: test code
-  # image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:5.0.0
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
   before_script:
     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
@@ -67,7 +64,6 @@ static_test_provision:
 
 build_application:
   stage: build application
-  # image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:5.0.0
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
   before_script:
     - pip3 install boto boto3
@@ -84,7 +80,6 @@ build_application:
         --extra-vars="cli_ec2region=us-west-1 cli_aminame=hellowebui cli_ci_pipeline_id='$CI_PIPELINE_ID' cli_ci_commit_message='$CI_COMMIT_MESSAGE'" 
 
 .deploy: &deploy
-  # image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:5.1.0
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
   script:
     - pip3 install boto boto3
@@ -123,7 +118,6 @@ review:
 
 plan:
   stage: review application
-  # image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:5.1.0
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
   before_script:
     - pip3 install boto boto3
@@ -204,7 +198,6 @@ functional_regression_test_staging:
     - triggers
 
 stop-staging:
-  # image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:5.1.0
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
   stage: review application
   variables:
@@ -226,7 +219,8 @@ stop-staging:
     - cd ./infrastructure
     - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
     - ansible-playbook site.yml 
-        --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+        --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+        --tags "deprovision" 
   when: manual
   environment:
     name: staging
@@ -237,7 +231,6 @@ stop-staging:
     - triggers
 
 stop-review:
-  # image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:5.1.0
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
   stage: review application
   variables:
@@ -259,7 +252,8 @@ stop-review:
     - cd ./infrastructure
     - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
     - ansible-playbook site.yml 
-        --extra-vars="cli_ec2region=$ENV_AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+        --extra-vars="cli_ec2region=$ENV_AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+        --tags "deprovision" 
   when: manual
   environment:
     name: $CI_BUILD_REF_NAME
