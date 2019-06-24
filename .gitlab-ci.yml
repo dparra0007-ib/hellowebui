@@ -68,6 +68,7 @@ build_application:
   stage: build application
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.1.0
   before_script:
+    - pip3 install boto boto3
     # - tower-cli config host $TOWER_CLI_HOST
     # - tower-cli config username $TOWER_CLI_USERNAME
     # - tower-cli config password $TOWER_CLI_PASSWORD
@@ -87,6 +88,7 @@ build_application:
 .deploy: &deploy
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:4.1.0
   script:
+    - pip3 install boto boto3
     # - tower-cli config host $ENV_TOWER_CLI_HOST
     # - tower-cli config username $ENV_TOWER_CLI_USERNAME
     # - tower-cli config password $ENV_TOWER_CLI_PASSWORD
@@ -176,6 +178,7 @@ functional_regression_test_staging:
   stage: regression test deploy
   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:4.0.0
   before_script:
+    - pip3 install boto boto3
     # - tower-cli config host $TOWER_CLI_HOST
     # - tower-cli config username $TOWER_CLI_USERNAME
     # - tower-cli config password $TOWER_CLI_PASSWORD
@@ -223,6 +226,7 @@ stop-staging:
     STACKNAME: $STACKNAME_STG
     ENVIRONMENT: staging
   before_script:
+    - pip3 install boto boto3
     # - tower-cli config host $ENV_TOWER_CLI_HOST
     # - tower-cli config username $ENV_TOWER_CLI_USERNAME
     # - tower-cli config password $ENV_TOWER_CLI_PASSWORD
@@ -257,6 +261,7 @@ stop-review:
     STACKNAME: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
     ENVIRONMENT: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
   before_script:
+    - pip3 install boto boto3
     # - tower-cli config host $ENV_TOWER_CLI_HOST
     # - tower-cli config username $ENV_TOWER_CLI_USERNAME
     # - tower-cli config password $ENV_TOWER_CLI_PASSWORD
