@@ -74,7 +74,7 @@ build_application:
     # - tower-cli config password $TOWER_CLI_PASSWORD
     # - tower-cli config verify_ssl false
 
-    - export ANSIBLE_HOST_KEY_CHECKING=False
+    # - export ANSIBLE_HOST_KEY_CHECKING=False
     - chmod 400 ./infrastructure/hellowebui_key.pem
     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
@@ -82,9 +82,9 @@ build_application:
   script:
     - cd ./infrastructure
     - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
-    - ansible-playbook site.yml 
+    - ansible-playbook build.yml 
         --extra-vars="cli_ec2region=us-west-1 cli_aminame=hellowebui cli_ci_pipeline_id='$CI_PIPELINE_ID' cli_ci_commit_message='$CI_COMMIT_MESSAGE'" 
-        --tags "build" 
+    - cd ../
   artifacts:
     paths:
       - ${PWD}/infrastructure/version.var
