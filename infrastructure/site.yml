@@ -1,7 +1,9 @@
 ---
+- import_playbook: ./build.yml
 - import_playbook: ./provision.yml
 - import_playbook: ./provision-core.yml
 - import_playbook: ./setup-core.yml
+- import_playbook: ./provision-conformity.yml
 - import_playbook: ./provision-test.yml
 - import_playbook: ./setup-test.yml
 - import_playbook: ./deprovision.yml

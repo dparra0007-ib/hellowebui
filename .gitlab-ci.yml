@@ -9,10 +9,8 @@ stages:
 - test code
 - build application
 - review application
-- test application
 - deploy
 - regression test deploy
-- cleanup
 
 variables:
   TOWER_CLI_HOST: $TOWER_CLI_HOST
@@ -50,35 +48,53 @@ static_test_service:
   except:
     - triggers
 
-build_application:
-  stage: build application
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+static_test_provision:
+  stage: test code
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
   before_script:
-    - tower-cli config host $TOWER_CLI_HOST
-    - tower-cli config username $TOWER_CLI_USERNAME
-    - tower-cli config password $TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
-
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - tower-cli job launch --job-template site-build --extra-vars="cli_ec2region=us-west-1 cli_aminame=hellowebui cli_ci_pipeline_id='$CI_PIPELINE_ID' cli_ci_commit_message='$CI_COMMIT_MESSAGE'" --wait -v
-  artifacts:
-    paths:
-      - ${PWD}/infrastructure/version.var
+    - cd ./infrastructure/terraform
+    - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
+    - terraform validate -check-variables=false
+  except:
+    - triggers
+
+build_application:
+  stage: build application
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
+  before_script:
+    - pip3 install boto boto3
+
+    - export ANSIBLE_HOST_KEY_CHECKING=False
+    - chmod 400 ./infrastructure/hellowebui_key.pem
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
+    - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
+  script:
+    - cd ./infrastructure
+    - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
+    - ansible-playbook build.yml 
+        --extra-vars="cli_ec2region=us-west-1 cli_aminame=hellowebui cli_ci_pipeline_id='$CI_PIPELINE_ID' cli_ci_commit_message='$CI_COMMIT_MESSAGE'" 
 
 .deploy: &deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
   script:
-    - tower-cli config host $ENV_TOWER_CLI_HOST
-    - tower-cli config username $ENV_TOWER_CLI_USERNAME
-    - tower-cli config password $ENV_TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
+    - pip3 install boto boto3
+
+    - export ANSIBLE_HOST_KEY_CHECKING=False
+    - chmod 400 ./infrastructure/hellowebui_key.pem
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
 
-    - tower-cli job launch 
-        --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+    - cd ./infrastructure
+    - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
+    - ansible-playbook site.yml 
+        --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'"
         --tags "provision,provision-core,setup-core" 
-        --wait
 
 review:
   <<: *deploy
@@ -89,7 +105,6 @@ review:
     ENV_TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
     ENV_AWS_DEFAULT_REGION: "us-west-1"
     STACKNAME: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
-    # STACKNAME: HelloWebui
     ENVIRONMENT: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
 
   environment:
@@ -101,59 +116,32 @@ review:
   except:
     - master
 
-functional_test_service:
-  stage: test application
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.1
+plan:
+  stage: review application
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
   before_script:
-    - tower-cli config host $TOWER_CLI_HOST
-    - tower-cli config username $TOWER_CLI_USERNAME
-    - tower-cli config password $TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
+    - pip3 install boto boto3
 
+    - export ANSIBLE_HOST_KEY_CHECKING=False
+    - chmod 400 ./infrastructure/hellowebui_key.pem
     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - tower-cli job launch 
-      --job-template site-prov 
-      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=HelloWebuiTest cli_deploymentenv=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
-      --tags "provision,provision-core,setup-core,provision-test,setup-test" 
-      --wait
+    - cd ./infrastructure
+    - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
+    - ansible-playbook site.yml 
+        --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+        --tags "provision-conformity"
+    - terraform show ./terraform/plan.tfstate
 
-    - mvn clean package -f ./hellowebui-functional-test
-    - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
-    - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:aws:cloudformation:stack-name,Values=HelloWebuiTest" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
-    - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar $SUT_IP $TESTER_IP
-
-    - tower-cli job launch 
-      --job-template site-deprov 
-      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=HelloWebuiTest cli_ci_pipeline_id='$CI_PIPELINE_ID'"
   only:
-    - master
+    - branches
   except:
-    - triggers
-
-# deploy_staging:
-#   stage: deploy
-#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
-#   before_script:
-#     - tower-cli config host $TOWER_CLI_HOST
-#     - tower-cli config username $TOWER_CLI_USERNAME
-#     - tower-cli config password $TOWER_CLI_PASSWORD
-#     - tower-cli config verify_ssl false
-
-#     - export AWS_DEFAULT_REGION="us-west-1"
-#   script:
-#     - tower-cli job launch 
-#       --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=HelloWebui cli_deploymentenv=$ENVIRONMENT cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
-#       --tags "provision,provision-core,setup-core" 
-#       --wait
-#   environment:
-#     name: staging
-#   only:
-#     - master
-#   except:
-#     - triggers
+    - master
+  artifacts:
+    paths:
+      - ${PWD}/infrastructure/terraform/plan.tfstate
 
 deploy_staging:
   <<: *deploy
@@ -177,76 +165,62 @@ deploy_staging:
 
 functional_regression_test_staging:
   stage: regression test deploy
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:3.0.1
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
   before_script:
-    - tower-cli config host $TOWER_CLI_HOST
-    - tower-cli config username $TOWER_CLI_USERNAME
-    - tower-cli config password $TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
+    - pip3 install boto boto3
 
+    - export ANSIBLE_HOST_KEY_CHECKING=False
+    - chmod 400 ./infrastructure/hellowebui_key.pem
     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION="us-west-1"
   script:
-    - tower-cli job launch 
-      --job-template site-prov 
-      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.test.template cli_stackname=$STACKNAME_STG cli_deploymentenv=staging cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+    - cd ./infrastructure
+    - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
+    - ansible-playbook site.yml 
+      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME_STG cli_deploymentenv=staging cli_action=test cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
       --tags "provision,provision-test,setup-test" 
-      --wait
+    - cd ../
 
     - mvn clean package -f ./hellowebui-functional-test
-    - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:aws:cloudformation:stack-name,Values=$STACKNAME_STG" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
-    - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:aws:cloudformation:stack-name,Values=$STACKNAME_STG" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+    - SUT_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Core Instance" "Name=tag:stackname,Values=$STACKNAME_STG" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
+    - TESTER_IP="$(aws ec2 describe-instances --filters "Name=tag:Role,Values=Test Instance" "Name=tag:stackname,Values=$STACKNAME_STG" "Name=instance-state-name,Values=running" | jq ".Reservations[0].Instances[0].PublicIpAddress" | tr -d \")"
     - java -jar ./hellowebui-functional-test/target/hellowebui-functional-test-0.0.1-SNAPSHOT.jar $SUT_IP $TESTER_IP
 
-    - tower-cli job launch 
-      --job-template site-prov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_awstemplate=aws.template cli_stackname=$STACKNAME_STG cli_deploymentenv=staging cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+    - cd ./infrastructure
+    - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
+    - ansible-playbook site.yml 
+      --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME_STG cli_deploymentenv=staging cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
       --tags "provision" 
-      --wait
   only:
     - master
   except:
     - triggers
 
-# rollback_staging:
-#   stage: regression test deploy
-#   image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
-#   before_script:
-#     - tower-cli config host $TOWER_CLI_HOST
-#     - tower-cli config username $TOWER_CLI_USERNAME
-#     - tower-cli config password $TOWER_CLI_PASSWORD
-#     - tower-cli config verify_ssl false
-
-#     - export AWS_DEFAULT_REGION="us-west-1"
-#   script:
-#     - cd ./infrastructure
-#     - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=HelloWebui cli_ci_pipeline_id='$CI_PIPELINE_ID'"
-#   environment:
-#     name: staging
-#   when: manual
-#   only:
-#     - master
-#   except:
-#     - triggers
-
 stop-staging:
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
-  stage: cleanup
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
+  stage: review application
   variables:
     ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
     ENV_TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
     ENV_TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
     ENV_AWS_DEFAULT_REGION: "us-west-1"
     STACKNAME: $STACKNAME_STG
+    ENVIRONMENT: staging
   before_script:
-    - tower-cli config host $ENV_TOWER_CLI_HOST
-    - tower-cli config username $ENV_TOWER_CLI_USERNAME
-    - tower-cli config password $ENV_TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
+    - pip3 install boto boto3
+
+    - export ANSIBLE_HOST_KEY_CHECKING=False
+    - chmod 400 ./infrastructure/hellowebui_key.pem
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
   script:
     - cd ./infrastructure
-    - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=$STACKNAME cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+    - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
+    - ansible-playbook site.yml 
+        --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+        --tags "deprovision" 
   when: manual
   environment:
     name: staging
@@ -257,23 +231,29 @@ stop-staging:
     - triggers
 
 stop-review:
-  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode:2.2.0
-  stage: cleanup
+  image: iaghcp-docker-technical-architecture.jfrog.io/infrastructureascode/maven:5.0.0
+  stage: review application
   variables:
     ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
     ENV_TOWER_CLI_USERNAME: $TOWER_CLI_USERNAME
     ENV_TOWER_CLI_PASSWORD: $TOWER_CLI_PASSWORD
     ENV_AWS_DEFAULT_REGION: "us-west-1"
     STACKNAME: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
+    ENVIRONMENT: $CI_PROJECT_NAME-$CI_BUILD_REF_NAME
   before_script:
-    - tower-cli config host $ENV_TOWER_CLI_HOST
-    - tower-cli config username $ENV_TOWER_CLI_USERNAME
-    - tower-cli config password $ENV_TOWER_CLI_PASSWORD
-    - tower-cli config verify_ssl false
+    - pip3 install boto boto3
+
+    - export ANSIBLE_HOST_KEY_CHECKING=False
+    - chmod 400 ./infrastructure/hellowebui_key.pem
+    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
     - export AWS_DEFAULT_REGION=$ENV_AWS_DEFAULT_REGION
   script:
     - cd ./infrastructure
-    - tower-cli job launch --job-template site-deprov --extra-vars="cli_ec2region=$AWS_DEFAULT_REGION cli_stackname=$STACKNAME cli_ci_pipeline_id='$CI_PIPELINE_ID'"
+    - ansible-galaxy install -r ./roles/requirements.yml --roles-path ./roles
+    - ansible-playbook site.yml 
+        --extra-vars="cli_ec2region=$ENV_AWS_DEFAULT_REGION cli_aws_access_key=${AWS_CREDENTIAL_ACCESS_KEY_ID} cli_aws_secret_key=${AWS_CREDENTIAL_SECRET_ACCESS_KEY} cli_tf=./terraform cli_stackname=$STACKNAME cli_deploymentenv=$ENVIRONMENT cli_action=deployment cli_ci_pipeline_id='$CI_PIPELINE_ID'" 
+        --tags "deprovision" 
   when: manual
   environment:
     name: $CI_BUILD_REF_NAME

@@ -1,6 +1,8 @@
 ---
 - name: Build web application hosted in apache server
   hosts: localhost
+  tags:
+    - build
 
   tasks:
     - name: Create temporary EC2 instance

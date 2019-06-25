@@ -16,33 +16,33 @@
         "tag:OpCo": "{{ g_opco }}"
     register: ami_find
 
-  - name: create a cloudformation stack
-    cloudformation:
-      stack_name: "{{ cli_stackname }}"
-      state: "present"
-      region: "{{ cli_ec2region }}"
-      disable_rollback: true
-      template: "{{ cli_awstemplate }}"
-      template_parameters:
-        KeyName: "{{ g_keyname }}"
+  - name: create a terraform deploy
+    terraform:
+      project_path: '{{ cli_tf }}'
+      state: present
+      force_init: true
+      backend_config:
+        key: "{{ cli_stackname }}"
+      variables:
         AMI: "{{ ami_find.images[0].image_id }}"
-        AWSRegion: "{{ cli_ec2region }}"
-        Environment: "{{ cli_deploymentenv }}"
-    register: stack
+        stackname: "{{ cli_stackname }}"
+        environment: "{{ cli_deploymentenv }}"
+        aws_access_key: "{{ cli_aws_access_key }}"
+        aws_secret_key: "{{ cli_aws_secret_key }}"
+        action: "{{ cli_action }}"
+      workspace: "{{ cli_deploymentenv }}"
+    register: stdout
+
+  - name: Show terraform stdout
+    debug: msg="{{ stdout }}"
 
   - name: Get facts about all the newly created instances
     ec2_instance_facts:
       region: "{{ cli_ec2region }}"
       filters:
         instance-state-name: running
-        "tag:aws:cloudformation:stack-name": "{{ cli_stackname }}"
+        "tag:stackname": "{{ cli_stackname }}"
     register: ec2_facts
-
-  # - name: Show stack outputs
-  #   debug: msg="Got instances {{ec2_facts}}"
-  # - name: Show stack outputs
-  #   debug: msg="Got instances {{item.public_ip_address}}"
-  #   with_items: "{{ ec2_facts.instances }}"
 
   - name: Ensure all instances are ready
     wait_for:
@@ -50,21 +50,3 @@
       host: "{{ item.public_ip_address }}"
       search_regex: OpenSSH
     with_items: "{{ ec2_facts.instances }}"
-
-  # - name: Get facts about core instances
-  #   ec2_instance_facts:
-  #     region: "{{ cli_ec2region }}"
-  #     filters:
-  #       instance-state-name: running
-  #       "tag:aws:cloudformation:stack-name": "{{ cli_stackname }}"
-  #       "tag:Role": "Core Instance"
-  #   register: ec2_core_facts
-
-  # - name: Build group of core instances
-  #   add_host:
-  #     name: "{{ item.public_ip_address }}"
-  #     groups: web
-  #     ansible_user: centos
-  #     ansible_host: "{{ item.public_ip_address }}"
-  #     ansible_ssh_private_key_file: "{{ g_ec2_private_key_file | default(omit) }}"
-  #   with_items: "{{ ec2_core_facts.instances }}"
