@@ -41,7 +41,7 @@ variables:
 
 static_test_service:
   stage: test code
-  image: iagtech/ansible-lint:2.0.0
+  image: iagtech/ansible-lint:2.0.0-public
   script:
     - ansible-lint ./infrastructure/site.yml
     - ansible-lint ./infrastructure/build.yml
