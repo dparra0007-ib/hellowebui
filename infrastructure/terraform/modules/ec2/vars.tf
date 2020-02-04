@@ -5,12 +5,12 @@ variable "action" {
 
 variable "aws_access_key" {
   description = "AWS Access Key."
-  # default = "AKIAIX3DNBYFKAC3H4QA"
+  # default = "AKIA6CJGFJXC2D25TMWK"
 }
 
 variable "aws_secret_key" {
   description = "AWS Secret Key."
-  # default = "Z35CuPGjgASafrbmUl25OOnF9r6iPQbnxRYMUlJw"
+  # default = "TLxSWJC9Tnr1eKwCnInoZmMbrPjomi6u1vmOE8Q6"
 }
 
 variable "private_key_path" {
