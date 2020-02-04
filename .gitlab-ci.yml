@@ -41,7 +41,7 @@ variables:
 
 static_test_service:
   stage: test code
-  image: iaghcp-docker-technical-architecture.jfrog.io/sonar-scanner/ansible:1.0.0
+  image: iagtech/ansible-lint:2.0.0
   script:
     - ansible-lint ./infrastructure/site.yml
     - ansible-lint ./infrastructure/build.yml
@@ -50,7 +50,7 @@ static_test_service:
 
 static_test_provision:
   stage: test code
-  image: iagtech/infrastructureascode/1.0.0-maven-public
+  image: iagtech/infrastructureascode:1.0.0-maven-public
   before_script:
     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
@@ -64,7 +64,7 @@ static_test_provision:
 
 build_application:
   stage: build application
-  image: iagtech/infrastructureascode/1.0.0-maven-public
+  image: iagtech/infrastructureascode:1.0.0-maven-public
   before_script:
     - pip3 install boto boto3
 
@@ -80,7 +80,7 @@ build_application:
         --extra-vars="cli_ec2region=us-west-1 cli_aminame=hellowebui cli_ci_pipeline_id='$CI_PIPELINE_ID' cli_ci_commit_message='$CI_COMMIT_MESSAGE'" 
 
 .deploy: &deploy
-  image: iagtech/infrastructureascode/1.0.0-maven-public
+  image: iagtech/infrastructureascode:1.0.0-maven-public
   script:
     - pip3 install boto boto3
 
@@ -118,7 +118,7 @@ review:
 
 plan:
   stage: review application
-  image: iagtech/infrastructureascode/1.0.0-maven-public
+  image: iagtech/infrastructureascode:1.0.0-maven-public
   before_script:
     - pip3 install boto boto3
 
@@ -165,7 +165,7 @@ deploy_staging:
 
 functional_regression_test_staging:
   stage: regression test deploy
-  image: iagtech/infrastructureascode/1.0.0-maven-public
+  image: iagtech/infrastructureascode:1.0.0-maven-public
   before_script:
     - pip3 install boto boto3
 
@@ -198,7 +198,7 @@ functional_regression_test_staging:
     - triggers
 
 stop-staging:
-  image: iagtech/infrastructureascode/1.0.0-maven-public
+  image: iagtech/infrastructureascode:1.0.0-maven-public
   stage: review application
   variables:
     ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
@@ -231,7 +231,7 @@ stop-staging:
     - triggers
 
 stop-review:
-  image: iagtech/infrastructureascode/1.0.0-maven-public
+  image: iagtech/infrastructureascode:1.0.0-maven-public
   stage: review application
   variables:
     ENV_TOWER_CLI_HOST: $TOWER_CLI_HOST
