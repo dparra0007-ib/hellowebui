@@ -14,7 +14,7 @@
         wait: yes
         group: WebServers
         count: 1
-        vpc_subnet_id: subnet-045e000538ac53329
+        vpc_subnet_id: subnet-00d5b4677b22fdacd
         assign_public_ip: yes
       register: ec2
 
@@ -76,8 +76,8 @@
           "tag:OpCo": "{{ g_opco }}"
       register: ami_find
 
-    # - name: Show stack outputs
-    #   debug: msg="Got instances {{ ami_find.images }}"
+    - name: Show stack outputs
+      debug: msg="Got instances {{ ami_find.images }}"
 
     - name: Now get the latest one
       set_fact:
@@ -85,8 +85,8 @@
           {{ ami_find.images | sort(attribute='tags.Version') | last }}
       register: ami
 
-    # - name: Show stack outputs
-    #   debug: msg="Got instances {{ ami.ansible_facts.latest_ami.tags.Version }}"
+    - name: Show stack outputs
+      debug: msg="Got instances {{ ami.ansible_facts.latest_ami.tags.Version }}"
 
     - name: Get new version number
       make:

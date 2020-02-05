@@ -39,29 +39,29 @@ variables:
 #   tags:
 #     - iaas
 
-static_test_service:
-  stage: test code
-  # image: iagtech/ansible-lint:2.0.0-public
-  script:
-    - docker run --rm -v ${PWD}:/home/ansible-lint iagtech/ansible-lint:2.0.0-public ./infrastructure/site.yml
-    # - ansible-lint ./infrastructure/site.yml
-    # - ansible-lint ./infrastructure/build.yml
-  except:
-    - triggers
+# static_test_service:
+#   stage: test code
+#   # image: iagtech/ansible-lint:2.0.0-public
+#   script:
+#     - docker run --rm -v ${PWD}:/home/ansible-lint iagtech/ansible-lint:2.0.0-public ./infrastructure/site.yml
+#     # - ansible-lint ./infrastructure/site.yml
+#     # - ansible-lint ./infrastructure/build.yml
+#   except:
+#     - triggers
 
-static_test_provision:
-  stage: test code
-  image: iagtech/infrastructureascode:1.0.0-maven-public
-  before_script:
-    - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
-    - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
-    - export AWS_DEFAULT_REGION="us-west-1"
-  script:
-    - cd ./infrastructure/terraform
-    - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
-    - terraform validate -check-variables=false
-  except:
-    - triggers
+# static_test_provision:
+#   stage: test code
+#   image: iagtech/infrastructureascode:1.0.0-maven-public
+#   before_script:
+#     - export AWS_ACCESS_KEY_ID=${AWS_CREDENTIAL_ACCESS_KEY_ID} 
+#     - export AWS_SECRET_ACCESS_KEY=${AWS_CREDENTIAL_SECRET_ACCESS_KEY}
+#     - export AWS_DEFAULT_REGION="us-west-1"
+#   script:
+#     - cd ./infrastructure/terraform
+#     - terraform init -backend-config="key=$CI_PROJECT_NAME-$CI_BUILD_REF_NAME"
+#     - terraform validate -check-variables=false
+#   except:
+#     - triggers
 
 build_application:
   stage: build application
