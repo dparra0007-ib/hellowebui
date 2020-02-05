@@ -62,7 +62,7 @@
       ec2:
         instance_ids: '{{ ec2.instance_ids }}'
         region: "{{ cli_ec2region }}"
-        vpc_subnet_id: subnet-045e000538ac53329
+        vpc_subnet_id: subnet-00d5b4677b22fdacd
         assign_public_ip: yes
         state: stopped
         wait: True
