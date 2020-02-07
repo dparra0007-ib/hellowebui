@@ -98,11 +98,11 @@
           PREVIOUS: "{{ ami.ansible_facts.latest_ami.tags.Version }}"
       register: version
 
-    # - name: Show stack outputs
-    #   debug: msg="Version {{ version.stdout_lines[0] }}"
+    - name: Show stack outputs
+      debug: msg="Version {{ version.stdout_lines[0] }}"
 
-    # - name: Show stack outputs
-    #   debug: "{{ lookup('env', 'PWD') }}"
+    - name: Show stack outputs
+      debug: "{{ lookup('env', 'PWD') }}"
 
     - name: Register AMI
       ec2_ami:
