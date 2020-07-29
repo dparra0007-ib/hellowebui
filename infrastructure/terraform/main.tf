@@ -16,7 +16,7 @@ provider "aws" {
 ##################################################################################
 
 module "vpc" {
-  source = "git::https://gitlab.com/david-parra/iag/terraform-modules/vpc.git"
+  source = "git::https://gitlab.com/david-parra/terraform-modules/vpc.git"
 
   aws_access_key  = "${var.aws_access_key}"
   aws_secret_key  = "${var.aws_secret_key}"
