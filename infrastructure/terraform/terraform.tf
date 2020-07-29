@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "iaggbs-terraform-backend"
+    bucket = "ib-terraform-backend"
     region = "us-west-1"
   }
 }
